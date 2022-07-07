@@ -1,8 +1,15 @@
-import './style.css'
+import Map from '@arcgis/core/Map';
+import MapView from '@arcgis/core/views/MapView';
 
-const app = document.querySelector<HTMLDivElement>('#app')!
+import './style.css';
 
-app.innerHTML = `
-  <h1>Hello Vite!</h1>
-  <a href="https://vitejs.dev/guide/features.html" target="_blank">Documentation</a>
-`
+const map = new Map(
+  { basemap: "streets-vector" }
+);
+
+const view = new MapView({
+  map: map,
+  container: 'viewDiv',
+  center: [-76.92, 40.2398],
+  zoom: 10
+});
