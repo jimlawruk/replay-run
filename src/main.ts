@@ -1,6 +1,8 @@
 import Map from '@arcgis/core/Map';
 import MapView from '@arcgis/core/views/MapView';
 
+import 'bootstrap/dist/css/bootstrap.css';
+import 'bootstrap-icons/font/bootstrap-icons.css';
 import './style.css';
 
 const map = new Map(
