@@ -81,6 +81,24 @@ export class Player {
         this.restartTimer();
     }
 
+    getCenter() {
+        let ySum: number = 0;
+        let xSum: number = 0;
+        let count: number = 0;
+        for (let i = 0; i < this.activities.length; i++) {
+            if (this.activities.length && this.activities[i].points.length > this.seconds) {
+                ySum += this.activities[i].points[this.seconds][0];
+                xSum += this.activities[i].points[this.seconds][0];
+                count++;
+            }
+        }
+        if (count) {
+            return [ySum / count, xSum / count];
+        } else {
+            return null;
+        }
+    }
+
     calculateDistances() {
         for (let i = 0; i < this.activities.length; i++) {
             let activity = this.activities[i];

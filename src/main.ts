@@ -109,7 +109,8 @@ let refresh = () => {
 }
 
 const center = () => {
-    if (player.activities.length && player.activities[0].points.length > player.seconds) {
+    const centerFromPlayer = player.getCenter();
+    if (centerFromPlayer) {
         (<any>view).center = player.activities[0].points[player.seconds];
     }
 }
@@ -124,7 +125,7 @@ const createActivityFromTextResult = (textResult: any) => {
     }
 };
 
-const isAutoCenterButtonActive = () =>{
+const isAutoCenterButtonActive = () => {
     return document.getElementById('center')?.classList.contains('active');
 }
 
