@@ -187,3 +187,5 @@ document.getElementById("gpxFile")?.addEventListener('change', () => {
 
 player.restartTimer();
 refresh();
+
+document.getElementById('panel')?.setAttribute('style', 'display:block');
