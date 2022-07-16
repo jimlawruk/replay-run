@@ -125,6 +125,10 @@ body,
         width: 15px;
     }
 
+    #activities-controls {
+        display: none;
+    }
+
     #playback-controls button {
         min-width: 4.5em;
     }
