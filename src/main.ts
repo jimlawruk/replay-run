@@ -103,14 +103,15 @@ let refresh = () => {
     setStartPauseText();
     setTimeText();
     setSpeedText();
+    if (isAutoCenterButtonActive()) {
+        center();
+    }
 }
 
 const center = () => {
     if (player.activities.length && player.activities[0].points.length > player.seconds) {
         (<any>view).center = player.activities[0].points[player.seconds];
     }
-    player.calculateDistances();
-    refresh();
 }
 
 const createActivityFromTextResult = (textResult: any) => {
@@ -122,6 +123,10 @@ const createActivityFromTextResult = (textResult: any) => {
         center();
     }
 };
+
+const isAutoCenterButtonActive = () =>{
+    return document.getElementById('center')?.classList.contains('active');
+}
 
 document.addEventListener('player-tick', () => {
     refresh();
@@ -168,8 +173,13 @@ document.getElementById('start')?.addEventListener('click', () => {
     refresh();
 });
 
-document.getElementById('center')?.addEventListener('click', () => {
-    center();
+const centerButton = document.getElementById('center');
+centerButton?.addEventListener('click', () => {
+    if (isAutoCenterButtonActive()) {
+        centerButton.classList.remove('active');
+    } else {
+        centerButton.classList.add('active');
+    }
 });
 
 document.getElementById("gpxFile")?.addEventListener('change', () => {

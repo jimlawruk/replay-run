@@ -69,6 +69,10 @@ body,
     min-width: 375px;
 }
 
+#playback-controls button.auto-center.active {
+    color: orange;
+}
+
 #speed-controls {
     font-weight: bold;
 }
@@ -135,7 +139,7 @@ body,
 
     #panel #playback-controls i.bi {
         margin: 0px;
-    }
+    }    
 
     #speed-controls i.bi.x {
         display: inline-block;
