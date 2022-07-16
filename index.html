@@ -2,60 +2,63 @@
 <html lang="en">
 
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Run Replay: Import GPX files to compare on a map</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Run Replay: Import GPX files to compare on a map</title>
 </head>
 
 <body>
-  <div id="viewDiv"></div>
+    <div id="box">
+        <div id="panel" style="display: none;">
+            <div id="activities-controls">
+                <div id="activities"></div>
+                <button id="clear" class="btn btn-sm btn-primary">
+                    <i class="bi bi-x-circle-fill"></i><span class="clear text">Clear</span><span class="text">
+                        Activities</span>
+                </button>
+                Upload new GPX File: <input id="gpxFile" type="file" />
+            </div>
 
-  <div id="panel" style="display: none;">
-    <div id="activities-controls">
-      <div id="activities"></div>
-      <button id="clear" class="btn btn-sm btn-primary">
-        <i class="bi bi-x-circle-fill"></i><span class="clear text">Clear</span><span class="text"> Activities</span>
-      </button>
-      Upload new GPX File: <input id="gpxFile" type="file" />
+            <div id="playback-controls">
+                <button id="reset" class="btn btn-sm btn-primary">
+                    <i class="bi bi-arrow-repeat"></i><span class="text">Restart</span>
+                </button>
+                <button id="back" class="btn btn-sm btn-primary">
+                    <i class="bi bi-skip-backward-fill"></i><span class="text">Backward</span>
+                </button>
+                <button id="start" class="btn btn-sm btn-primary">
+                    <i class="bi bi-play-fill"></i><span class="text">Start</span>
+                </button>
+                <button id="pause" class="btn btn-sm btn-primary" style="display: none">
+                    <i class="bi bi-pause-fill"></i><span class="text">Pause</span>
+                </button>
+                <button id="forward" class="btn btn-sm btn-primary">
+                    <i class="bi bi-skip-forward-fill"></i><span class="text">Forward</span>
+                </button>
+
+                <button id="center" class="btn btn-sm btn-primary">
+                    <i class="bi bi-record2-fill"></i><span class="text">Center</span>
+                </button>
+            </div>
+
+            <div id="speed-controls">
+                <span>Speed: </span>
+                <button id="slower" class="btn btn-sm btn-primary">
+                    <i class="bi bi-arrow-left"></i><span class="text">Slower</span>
+                </button>
+                <i class="x bi bi-x-lg"></i><span id="multiplier"></span>
+                <button id="faster" class="btn btn-sm btn-primary">
+                    <i class="bi bi-arrow-right"></i><span class="text">Faster</span>
+                </button>
+                <span id="time"></span>
+            </div>
+
+        </div>
+
+        <div id="viewDiv"></div>
+
     </div>
-
-    <div id="playback-controls">
-      <button id="reset" class="btn btn-sm btn-primary">
-        <i class="bi bi-arrow-repeat"></i><span class="text">Restart</span>
-      </button>
-      <button id="back" class="btn btn-sm btn-primary">
-        <i class="bi bi-skip-backward-fill"></i><span class="text">Backward</span>
-      </button>
-      <button id="start" class="btn btn-sm btn-primary">
-        <i class="bi bi-play-fill"></i><span class="text">Start</span>
-      </button>
-      <button id="pause" class="btn btn-sm btn-primary" style="display: none">
-        <i class="bi bi-pause-fill"></i><span class="text">Pause</span>
-      </button>
-      <button id="forward" class="btn btn-sm btn-primary">
-        <i class="bi bi-skip-forward-fill"></i><span class="text">Forward</span>
-      </button>
-
-      <button id="center" class="btn btn-sm btn-primary">
-        <i class="bi bi-record2-fill"></i><span class="text">Center</span>
-      </button>
-    </div>
-
-    <div id="speed-controls">
-      <span>Speed: </span>
-      <button id="slower" class="btn btn-sm btn-primary">
-        <i class="bi bi-arrow-left"></i><span class="text">Slower</span>
-      </button>
-      <i class="x bi bi-x-lg"></i><span id="multiplier"></span>
-      <button id="faster" class="btn btn-sm btn-primary">
-        <i class="bi bi-arrow-right"></i><span class="text">Faster</span>
-      </button>
-      <span id="time"></span>
-    </div>
-
-  </div>
-
-  <script type="module" src="/src/main.ts"></script>
+    <script type="module" src="/src/main.ts"></script>
 </body>
 
 </html>
