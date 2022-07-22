@@ -111,7 +111,7 @@ let refresh = () => {
 const center = () => {
     const centerFromPlayer = player.getCenter();
     if (centerFromPlayer) {
-        (<any>view).center = player.activities[0].points[player.seconds];
+        (<any>view).center = centerFromPlayer;
     }
 }
 

@@ -86,14 +86,14 @@ export class Player {
         let xSum: number = 0;
         let count: number = 0;
         for (let i = 0; i < this.activities.length; i++) {
-            if (this.activities.length && this.activities[i].points.length > this.seconds) {
-                ySum += this.activities[i].points[this.seconds][0];
+            if (this.activities.length && this.activities[i].points.length > this.seconds) {                
                 xSum += this.activities[i].points[this.seconds][0];
+                ySum += this.activities[i].points[this.seconds][1];
                 count++;
             }
         }
         if (count) {
-            return [ySum / count, xSum / count];
+            return [xSum / count , ySum / count];
         } else {
             return null;
         }
