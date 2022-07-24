@@ -1,19 +1,20 @@
 @import url('https://js.arcgis.com/4.24/esri/css/main.css');
 
-#box {
-    display: flex;
-    flex-flow: column;
-    height: 100%;
-}
-
 html,
 body,
-#viewDiv {
+#viewDiv,
+#map-container {
     flex: 1 1 auto;
     height: 100%;
     width: 100%;
     padding: 0;
     margin: 0;
+}
+
+#box {
+    display: flex;
+    flex-flow: column;
+    height: 100%;
 }
 
 #panel {
@@ -108,8 +109,7 @@ body,
 @media screen and (max-width: 40em) {
 
     #panel {
-        top: 0px;
-        right: 0px;
+        position:static;
         padding: 0px 10px 0px 10px;
         border-radius: 0;
         width: 100%;
@@ -121,7 +121,7 @@ body,
 
     #panel #activities table th,
     #panel #activities table td {
-        padding: 2px;
+        padding: 0px;
     }
 
     #activities td.icon span {
@@ -139,7 +139,7 @@ body,
 
     #panel #playback-controls i.bi {
         margin: 0px;
-    }    
+    }
 
     #speed-controls i.bi.x {
         display: inline-block;

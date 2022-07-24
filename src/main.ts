@@ -97,6 +97,16 @@ let refreshGraphics = () => {
     }
 }
 
+const resizeMap = () => {
+    if (window.innerWidth < 500) {
+        const panel = document.getElementById('panel');
+        const mapContainer = document.getElementById('map-container');
+        if (panel && mapContainer) {
+            mapContainer.style.height = (window.innerHeight - panel.offsetHeight).toString() + 'px';
+        }
+    }
+}
+
 let refresh = () => {
     refreshGraphics();
     setActivityText();
@@ -106,6 +116,7 @@ let refresh = () => {
     if (isAutoCenterButtonActive()) {
         center();
     }
+    resizeMap();
 }
 
 const center = () => {
