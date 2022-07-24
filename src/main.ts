@@ -95,19 +95,26 @@ let setActivityText = () => {
         if (!activity.averagePace) {
             activity.averagePace = '';
         }
+        if (activity.points.length - 1 <= player.seconds) {
+            activity.timeDisplay = player.getMinutesSeconds(activity.points.length - 1);
+        } else {
+            activity.timeDisplay = '';
+        }
         html += `<tr>
                 <td class="icon"><span style="background-color: rgb(${colors[i].join(',')})"></td>
                 <td>${activity.title}</td>
                 <td>${activity.accumulatedDistance.toFixed(2)}</td>
                 <td>${activity.averagePace}</td>
+                <td>${activity.timeDisplay}</td>
             </tr>`;
     }
     html = `<table class="table">
             <thead>
               <th></th>
-              <th>Activity Name</th>
+              <th>Name</th>
               <th>Miles</th>
-              <th>Avg. Pace</th>
+              <th>Pace</th>
+              <th>Time</th>
             </thhead>
             <tbody>${html}</tboday>
           </table>`;
@@ -126,7 +133,7 @@ let setStartPauseText = () => {
 
 const setTimeText = () => {
     const timeElement = document.querySelector<HTMLDivElement>('#time');
-    (<any>timeElement).innerHTML = player.getMinutesSeconds(player.seconds)
+    (<any>timeElement).innerHTML = player.getMinutesSeconds(player.seconds);
 };
 
 let refreshGraphics = () => {

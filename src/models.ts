@@ -5,4 +5,5 @@ export interface Activity {
     accumulatedDistance?: number;
     pace?: number;
     averagePace?: string;
+    timeDisplay?: string;
 }
