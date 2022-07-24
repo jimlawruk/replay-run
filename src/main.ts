@@ -17,7 +17,7 @@ const gpxParser = new GPXParser;
 const createActivityFromTextResult = (textResult: string) => {
     var activity = gpxParser.getActivitiesFromResult(textResult);
     player.activities.push(activity);
-    player.seconds = 0;
+    player.reset();
     refresh();
     if (player.activities.length === 1) {
         center();
@@ -91,6 +91,8 @@ let setActivityText = () => {
         let activity = player.activities[i];
         if (activity.accumulatedDistance === undefined) {
             activity.accumulatedDistance = 0;
+        }
+        if (!activity.averagePace) {
             activity.averagePace = '';
         }
         html += `<tr>
@@ -182,7 +184,7 @@ document.getElementById('clear')?.addEventListener('click', () => {
 
 document.getElementById('reset')?.addEventListener('click', () => {
     player.toggleStartPause(true);
-    player.seconds = 0;
+    player.reset();
     refresh();
 });
 
@@ -197,12 +199,12 @@ document.getElementById('faster')?.addEventListener('click', () => {
 });
 
 document.getElementById('back')?.addEventListener('click', () => {
-    player.seconds = player.seconds - player.multiplier;
+    player.goBackward();
     refresh();
 });
 
 document.getElementById('forward')?.addEventListener('click', () => {
-    player.seconds = player.seconds + player.multiplier;
+    player.goForward();
     refresh();
 });
 

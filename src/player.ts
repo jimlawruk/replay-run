@@ -5,6 +5,7 @@ export class Player {
     activities: Activity[] = [];
     multiplier: number = 10;
     seconds: number = 0;
+    maxSecondsOfAnyActivity: number = 0;
     timerEventName: string = 'player-tick';
     timerEvent: Event = new Event(this.timerEventName);
     timer: any = null;
@@ -13,8 +14,28 @@ export class Player {
 
     clearActivities() {
         this.activities.length = 0;
+        this.reset();
+    }
+
+    reset() {
         this.toggleStartPause(true);
         this.seconds = 0;
+        this.refreshCalculations();
+    }
+
+    resetActivityCounters() {
+        for (const activity of this.activities) {
+            activity.accumulatedDistance = 0;
+            activity.lastTimeUsedForDistance = 0;
+            activity.averagePace = '';
+        }
+        const lengths = this.activities.map(x => x.points.length);
+        this.maxSecondsOfAnyActivity = Math.max.apply(Math, lengths) - 1;
+    }
+
+    refreshCalculations() {
+        this.resetActivityCounters();
+        this.calculateDistances();
     }
 
     restartTimer() {
@@ -23,15 +44,13 @@ export class Player {
                 clearInterval(this.timer);
             }
             this.timer = setInterval(() => {
-                const lengths = this.activities.map(x => x.points.length);
-                const maxSecondsOfAnyActivity = Math.max.apply(Math, lengths);
-                this.done = this.seconds >= maxSecondsOfAnyActivity;
+                this.done = this.seconds >= this.maxSecondsOfAnyActivity;
                 if (!this.done) {
                     this.seconds++;
                 } else {
                     this.paused = true;
                 }
-                if (this.seconds % 10 === 0) {
+                if (this.seconds % 10 === 0 || this.done) {
                     this.calculateDistances();
                 }
                 document.dispatchEvent(this.timerEvent);
@@ -81,19 +100,35 @@ export class Player {
         this.restartTimer();
     }
 
+    goBackward() {
+        this.seconds = this.seconds - this.multiplier;
+        if (this.seconds < 0) {
+            this.seconds = 0;
+        }
+        this.refreshCalculations();
+    }
+
+    goForward() {
+        this.seconds = this.seconds + this.multiplier;
+        if (this.seconds < 0) {
+            this.seconds = 0;
+        }
+        this.refreshCalculations();
+    }
+
     getCenter() {
         let ySum: number = 0;
         let xSum: number = 0;
         let count: number = 0;
         for (let i = 0; i < this.activities.length; i++) {
-            if (this.activities.length && this.activities[i].points.length > this.seconds) {                
+            if (this.activities.length && this.activities[i].points.length > this.seconds) {
                 xSum += this.activities[i].points[this.seconds][0];
                 ySum += this.activities[i].points[this.seconds][1];
                 count++;
             }
         }
         if (count) {
-            return [xSum / count , ySum / count];
+            return [xSum / count, ySum / count];
         } else {
             return null;
         }
@@ -102,15 +137,26 @@ export class Player {
     calculateDistances() {
         for (let i = 0; i < this.activities.length; i++) {
             let activity = this.activities[i];
-            activity.accumulatedDistance = 0;
-            for (let t = 1; t < this.seconds; t++) {
-                if (activity.points.length > t) {
-                    const lastPoint = activity.points[t - 1];
-                    const currentPoint = activity.points[t];
-                    activity.accumulatedDistance += this.getMiles(this.calcCrow(lastPoint[1], lastPoint[0], currentPoint[1], currentPoint[0]));
-                }
+            if (!activity.lastTimeUsedForDistance || !activity.accumulatedDistance) {
+                activity.lastTimeUsedForDistance = 1;
+                activity.accumulatedDistance = 0;
             }
-            activity.averagePace = this.getAveragePace(this.seconds, activity.accumulatedDistance);
+            if (activity.lastTimeUsedForDistance <= this.seconds) {
+                for (let t = activity.lastTimeUsedForDistance; t < this.seconds; t++) {
+                    if (activity.points.length > t) {
+                        const lastPoint = activity.points[t - 1];
+                        const currentPoint = activity.points[t];
+                        if (!activity.accumulatedDistance) {
+                            activity.accumulatedDistance = 0;
+                        }
+                        activity.accumulatedDistance += this.getMiles(this.calcCrow(lastPoint[1], lastPoint[0], currentPoint[1], currentPoint[0]));
+                    }
+                }
+                activity.lastTimeUsedForDistance = this.seconds;
+            }
+            if (this.seconds > 0 && activity.points.length >= this.seconds) {
+                activity.averagePace = this.getAveragePace(this.seconds, activity.accumulatedDistance);
+            }
         }
     }
 
