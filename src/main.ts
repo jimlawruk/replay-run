@@ -14,8 +14,49 @@ import './style.css';
 const player = new Player;
 const gpxParser = new GPXParser;
 
-player.activities = [Activities.Activity1, Activities.Activity2];
-const start = player.activities[0].points[0];
+const createActivityFromTextResult = (textResult: string) => {
+    var activity = gpxParser.getActivitiesFromResult(textResult);
+    player.activities.push(activity);
+    player.seconds = 0;
+    refresh();
+    if (player.activities.length === 1) {
+        center();
+    }
+};
+
+const loadGpxFromUrl = (url: string) => {
+    const request = new XMLHttpRequest();
+    request.open('GET', url, true);
+    request.send(null);
+    request.onreadystatechange = () => {
+        if (request.readyState === 4 && request.status === 200) {
+            const type = request.getResponseHeader('Content-Type');
+            if (type?.indexOf("text") !== 1) {
+                const text = request.responseText;
+                createActivityFromTextResult(text);
+            }
+        }
+    }
+}
+
+const params = new Proxy(new URLSearchParams(window.location.search), {
+    get: (searchParams, prop) => searchParams.get(<string>prop),
+});
+
+let start = [-76, 42];
+let zoom = 6;
+if ((<any>params)['default'] === 'true') {
+    player.activities = [Activities.Activity1, Activities.Activity2];
+    start = player.activities[0].points[0];
+    zoom = 16;
+} else if ((<any>params)['load'] === 'drchhbgmile2022') {
+    loadGpxFromUrl('Harrisburg_Mile_2022_Ty.gpx');
+    loadGpxFromUrl('Harrisburg_Mile_2022_Cem.gpx');
+    loadGpxFromUrl('Harrisburg_Mile_2022_Jim.gpx');
+    loadGpxFromUrl('Harrisburg_Mile_2022_David.gpx');
+    start = [-76.9000680, 40.2786980];
+    zoom = 17;
+}
 
 const map = new Map(
     { basemap: "hybrid" }
@@ -25,7 +66,7 @@ const view = new MapView({
     map: map,
     container: 'viewDiv',
     center: start,
-    zoom: 16
+    zoom: zoom
 });
 
 const basemapToggle = new BasemapToggle({
@@ -41,7 +82,7 @@ let colors = [
     [200, 0, 0],
     [200, 200, 0],
     [0, 0, 200],
-    [200, 0, 200]
+    [0, 200, 0]
 ];
 
 let setActivityText = () => {
@@ -125,16 +166,6 @@ const center = () => {
         (<any>view).center = centerFromPlayer;
     }
 }
-
-const createActivityFromTextResult = (textResult: any) => {
-    var activity = gpxParser.getActivitiesFromResult(textResult);
-    player.activities.push(activity);
-    player.seconds = 0;
-    refresh();
-    if (player.activities.length === 1) {
-        center();
-    }
-};
 
 const isAutoCenterButtonActive = () => {
     return document.getElementById('center')?.classList.contains('active');
