@@ -20,7 +20,7 @@ const createActivityFromTextResult = (textResult: string) => {
     player.reset();
     refresh();
     if (player.activities.length === 1) {
-        center();
+        center(16);
     }
 };
 
@@ -162,9 +162,14 @@ let refresh = () => {
     resizeMap();
 }
 
-const center = () => {
+const center = (zoom?: number) => {
     const centerFromPlayer = player.getCenter();
-    if (centerFromPlayer) {
+    if (zoom) {
+        (<any>view).goTo({
+            center: centerFromPlayer,
+            zoom: zoom
+        });
+    } else {
         (<any>view).center = centerFromPlayer;
     }
 }
