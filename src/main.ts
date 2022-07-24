@@ -242,7 +242,7 @@ centerButton?.addEventListener('click', () => {
 document.getElementById("gpxFile")?.addEventListener('change', () => {
     let reader = new FileReader();
     reader.addEventListener("load", () => {
-        createActivityFromTextResult(reader.result);
+        createActivityFromTextResult(<any>reader.result);
     }, false);
     const files = (document.getElementById('gpxFile') as HTMLInputElement).files;
     if (files) {
