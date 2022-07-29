@@ -1,4 +1,5 @@
 export interface Activity {
+    id?: number;
     title?: string;
     points: number[][];
     lastTimeUsedForDistance?: number;
@@ -6,4 +7,5 @@ export interface Activity {
     pace?: number;
     averagePace?: string;
     timeDisplay?: string;
+    visible?: boolean;
 }

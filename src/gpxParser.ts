@@ -25,7 +25,7 @@ export class GPXParser {
                 }
             }
         }
-        return { title: title, points: longLatArray };
+        return { title: title, points: longLatArray, visible: true };
     }
 
     getFloatVal(element: Element, key: string) {

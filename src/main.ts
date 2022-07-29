@@ -15,9 +15,13 @@ const player = new Player;
 const gpxParser = new GPXParser;
 
 const createActivityFromTextResult = (textResult: string) => {
-    var activity = gpxParser.getActivitiesFromResult(textResult);
+    const activity = gpxParser.getActivitiesFromResult(textResult);
+    const existingIds = player.activities?.map(x => x.id || 0);
+    const maxId = existingIds.length ? Math.max(...existingIds) : 0;
+    activity.id = maxId + 1;
     player.activities.push(activity);
     player.reset();
+    rebuildActivityTable();
     refresh();
     if (player.activities.length === 1) {
         center(16);
@@ -85,31 +89,22 @@ let colors = [
     [0, 200, 0]
 ];
 
-let setActivityText = () => {
+let rebuildActivityTable = () => {
     let html = '';
     for (let i = 0; i < player.activities.length; i++) {
         let activity = player.activities[i];
-        if (activity.accumulatedDistance === undefined) {
-            activity.accumulatedDistance = 0;
-        }
-        if (!activity.averagePace) {
-            activity.averagePace = '';
-        }
-        if (activity.points.length - 1 <= player.seconds) {
-            activity.timeDisplay = player.getMinutesSeconds(activity.points.length - 1);
-        } else {
-            activity.timeDisplay = '';
-        }
-        html += `<tr>
+        html += `<tr id="tr-${activity.id}">
+                <td><input type="checkbox" id="toggle-${activity.id}" ${activity.visible ? 'checked' : ''}/></td>
                 <td class="icon"><span style="background-color: rgb(${colors[i].join(',')})"></td>
                 <td>${activity.title}</td>
-                <td>${activity.accumulatedDistance.toFixed(2)}</td>
-                <td>${activity.averagePace}</td>
-                <td>${activity.timeDisplay}</td>
+                <td></td>
+                <td></td>
+                <td></td>
             </tr>`;
     }
     html = `<table class="table">
             <thead>
+              <th></th>
               <th></th>
               <th>Name</th>
               <th>Miles</th>
@@ -119,6 +114,28 @@ let setActivityText = () => {
             <tbody>${html}</tboday>
           </table>`;
     (<any>document.getElementById('activities')).innerHTML = html;
+};
+
+let setActivityText = () => {
+    for (let i = 0; i < player.activities.length; i++) {
+        let activity = player.activities[i];
+        if (activity) {
+            const tr = document.getElementById('tr-' + activity.id?.toString());
+            if (tr) {
+                if (activity.accumulatedDistance === undefined) {
+                    activity.accumulatedDistance = 0;
+                }
+                tr.children[3].innerHTML = activity.accumulatedDistance?.toFixed(2);
+                tr.children[4].innerHTML = activity.averagePace || '';
+
+                if (activity.points.length - 1 <= player.seconds) {
+                    tr.children[5].innerHTML = player.getMinutesSeconds(activity.points.length - 1);
+                } else {
+                    tr.children[5].innerHTML = '';
+                }
+            }
+        }
+    }
 };
 
 let setSpeedText = () => {
@@ -140,7 +157,7 @@ let refreshGraphics = () => {
     pointLayer.removeAll();
     for (let i = 0; i < player.activities.length; i++) {
         let activity = player.activities[i];
-        if (activity.points?.length > player.seconds) {
+        if (activity.visible && activity.points?.length > player.seconds) {
             const graphic = MapUtils.getPointGraphic(activity.points[player.seconds], colors[i]);
             pointLayer.add(graphic);
         }
@@ -191,6 +208,7 @@ document.addEventListener('player-tick', () => {
 
 document.getElementById('clear')?.addEventListener('click', () => {
     player.clearActivities();
+    rebuildActivityTable();
     refresh();
 });
 
@@ -250,6 +268,19 @@ document.getElementById("gpxFile")?.addEventListener('change', () => {
             reader.readAsText(files[i]);
         }
     }
+});
+
+document.getElementById('activities')?.addEventListener('click', (e: MouseEvent) => {
+    const element = e.target as HTMLElement;
+    if (element.tagName === 'INPUT') {
+        const htmlInputElement = element as HTMLInputElement;
+        const inputActivityId = htmlInputElement.id.split('-')[1];
+        const activitiesFound = player.activities.filter(x => x.id === parseInt(inputActivityId));
+        if (activitiesFound.length) {
+            activitiesFound[0].visible = htmlInputElement.checked;
+                refresh();
+            }
+        }
 });
 
 player.restartTimer();
