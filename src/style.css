@@ -1,5 +1,9 @@
 @import url('https://js.arcgis.com/4.24/esri/css/main.css');
 
+button {
+    touch-action: manipulation;
+}
+
 html,
 body,
 #viewDiv,
@@ -18,10 +22,10 @@ body,
 }
 
 #panel {
-    position:absolute;
+    position: absolute;
     top: 20px;
     right: 20px;
-    flex: 0 1 auto;   
+    flex: 0 1 auto;
     background-color: #fff;
     border-radius: 5px;
     padding: 10px;
@@ -109,7 +113,7 @@ body,
 @media screen and (max-width: 40em) {
 
     #panel {
-        position:static;
+        position: static;
         padding: 0px 10px 0px 10px;
         border-radius: 0;
         width: 100%;
