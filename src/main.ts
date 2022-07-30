@@ -26,6 +26,7 @@ const createActivityFromTextResult = (textResult: string) => {
     if (player.activities.length === 1) {
         center(16);
     }
+    gaEvent('load_activity');
 };
 
 const loadGpxFromUrl = (url: string) => {
@@ -174,6 +175,10 @@ const resizeMap = () => {
     }
 }
 
+const gaEvent = (action: string) => {
+    (<any>window).gtag('event', action);
+}
+
 let refresh = () => {
     refreshGraphics();
     setActivityText();
@@ -210,42 +215,50 @@ document.getElementById('clear')?.addEventListener('click', () => {
     player.clearActivities();
     rebuildActivityTable();
     refresh();
+    gaEvent('clear_activities');
 });
 
 document.getElementById('reset')?.addEventListener('click', () => {
     player.toggleStartPause(true);
     player.reset();
     refresh();
+    gaEvent('reset');
 });
 
 document.getElementById('slower')?.addEventListener('click', () => {
     player.adjustSpeed(false);
     refresh();
+    gaEvent('slower');
 });
 
 document.getElementById('faster')?.addEventListener('click', () => {
     player.adjustSpeed(true);
     refresh();
+    gaEvent('faster');
 });
 
 document.getElementById('back')?.addEventListener('click', () => {
     player.goBackward();
     refresh();
+    gaEvent('back');
 });
 
 document.getElementById('forward')?.addEventListener('click', () => {
     player.goForward();
     refresh();
+    gaEvent('forward');
 });
 
 document.getElementById('pause')?.addEventListener('click', () => {
     player.toggleStartPause(true);
     refresh();
+    gaEvent('pause');
 });
 
 document.getElementById('start')?.addEventListener('click', () => {
     player.toggleStartPause(false);
     refresh();
+    gaEvent('start');
 });
 
 const centerButton = document.getElementById('center');
@@ -255,6 +268,7 @@ centerButton?.addEventListener('click', () => {
     } else {
         centerButton.classList.add('active');
     }
+    gaEvent('auto_center');
 });
 
 document.getElementById("gpxFile")?.addEventListener('change', () => {
@@ -279,6 +293,7 @@ document.getElementById('activities')?.addEventListener('click', (e: MouseEvent)
         if (activitiesFound.length) {
             activitiesFound[0].visible = htmlInputElement.checked;
                 refresh();
+            gaEvent('toggle_visibility');
             }
         }
 });
