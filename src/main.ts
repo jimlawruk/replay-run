@@ -21,7 +21,7 @@ const createActivityFromTextResult = (textResult: string) => {
     activity.id = maxId + 1;
     player.activities.push(activity);
     player.reset();
-    rebuildActivityTable();
+    refreshActivities();
     refresh();
     if (player.activities.length === 1) {
         center(16);
@@ -90,6 +90,23 @@ let colors = [
     [0, 200, 0]
 ];
 
+let getButton = (id: string): HTMLButtonElement => {
+    return (<HTMLButtonElement>document.getElementById(id));
+};
+
+let enableDisableButtons = () => {
+    const disabled = !player.activities.length;
+    const buttonIds = ['clear', 'reset', 'back', 'start', 'pause', 'forward', 'center', 'faster', 'slower'];
+    for (const buttonId of buttonIds) {
+        getButton(buttonId).disabled = disabled;
+    }
+}
+
+let refreshActivities = () => {
+    rebuildActivityTable();
+    enableDisableButtons();
+}
+
 let rebuildActivityTable = () => {
     let html = '';
     for (let i = 0; i < player.activities.length; i++) {
@@ -115,6 +132,7 @@ let rebuildActivityTable = () => {
             <tbody>${html}</tboday>
           </table>`;
     (<any>document.getElementById('activities')).innerHTML = html;
+    enableDisableButtons();
 };
 
 let setActivityText = () => {
@@ -213,7 +231,7 @@ document.addEventListener('player-tick', () => {
 
 document.getElementById('clear')?.addEventListener('click', () => {
     player.clearActivities();
-    rebuildActivityTable();
+    refreshActivities();
     refresh();
     gaEvent('clear_activities');
 });
