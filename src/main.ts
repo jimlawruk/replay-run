@@ -64,7 +64,7 @@ if ((<any>params)['default'] === 'true') {
 }
 
 const map = new Map(
-    { basemap: "hybrid" }
+    { basemap: "streets-vector" }
 );
 
 const view = new MapView({
@@ -76,7 +76,7 @@ const view = new MapView({
 
 const basemapToggle = new BasemapToggle({
     view: view,
-    nextBasemap: 'streets-vector'
+    nextBasemap: 'hybrid'
 });
 view.ui.add(basemapToggle, "bottom-left");
 
