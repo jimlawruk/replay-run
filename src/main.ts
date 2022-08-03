@@ -147,8 +147,8 @@ let setActivityText = () => {
                 tr.children[3].innerHTML = activity.accumulatedDistance?.toFixed(2);
                 tr.children[4].innerHTML = activity.averagePace || '';
 
-                if (activity.points.length - 1 <= player.seconds) {
-                    tr.children[5].innerHTML = player.getMinutesSeconds(activity.points.length - 1);
+                if (activity.points.length - 1 <= player.seconds || !player.started) {
+                    tr.children[5].innerHTML = activity.timeDisplay || '';
                 } else {
                     tr.children[5].innerHTML = '';
                 }

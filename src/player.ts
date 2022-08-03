@@ -12,6 +12,10 @@ export class Player {
     paused: boolean = true;
     done: boolean = false;
 
+    get started(): boolean {
+        return !this.paused || this.seconds !== 0;
+    }
+
     clearActivities() {
         this.activities.length = 0;
         this.reset();
@@ -139,12 +143,16 @@ export class Player {
     calculateDistances() {
         for (let i = 0; i < this.activities.length; i++) {
             let activity = this.activities[i];
+            let secondsForCalculations = activity.points.length - 1;
+            if (this.started) {
+                secondsForCalculations = this.seconds;
+            }
             if (!activity.lastTimeUsedForDistance || !activity.accumulatedDistance) {
                 activity.lastTimeUsedForDistance = 1;
                 activity.accumulatedDistance = 0;
             }
-            if (activity.lastTimeUsedForDistance <= this.seconds) {
-                for (let t = activity.lastTimeUsedForDistance; t < this.seconds; t++) {
+            if (activity.lastTimeUsedForDistance <= secondsForCalculations) {
+                for (let t = activity.lastTimeUsedForDistance; t < secondsForCalculations; t++) {
                     if (activity.points.length > t) {
                         const lastPoint = activity.points[t - 1];
                         const currentPoint = activity.points[t];
@@ -154,10 +162,19 @@ export class Player {
                         activity.accumulatedDistance += this.getMiles(this.calcCrow(lastPoint[1], lastPoint[0], currentPoint[1], currentPoint[0]));
                     }
                 }
-                activity.lastTimeUsedForDistance = this.seconds;
+                activity.lastTimeUsedForDistance = secondsForCalculations;
             }
-            if (this.seconds > 0 && activity.points.length >= this.seconds) {
-                activity.averagePace = this.getAveragePace(this.seconds, activity.accumulatedDistance);
+            if (secondsForCalculations > 0) {
+                if (activity.points.length >= secondsForCalculations) {
+                    activity.averagePace = this.getAveragePace(secondsForCalculations, activity.accumulatedDistance);
+                } else {
+                    activity.averagePace = this.getAveragePace(activity.points.length - 1, activity.accumulatedDistance);
+                }
+            }
+            if (activity.points.length <= secondsForCalculations) {
+                activity.timeDisplay = this.getMinutesSeconds(activity.points.length - 1);
+            } else if (!this.started) {
+                activity.timeDisplay = this.getMinutesSeconds(activity.points.length - 1);
             }
         }
     }
