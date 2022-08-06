@@ -229,6 +229,20 @@ const isAutoCenterButtonActive = () => {
     return document.getElementById('center')?.classList.contains('active');
 }
 
+const showModal = () => {
+    document.getElementById('modal')?.setAttribute('style', 'display:block');
+    document.getElementById('modal')?.classList.add('show');
+    document.getElementById('modal-backdrop')?.setAttribute('style', 'display:block');
+    document.getElementById('modal-backdrop')?.classList.add('show');
+}
+
+const closeModal = () => {
+    document.getElementById('modal')?.setAttribute('style', 'display:none');
+    document.getElementById('modal')?.classList.remove('show');
+    document.getElementById('modal-backdrop')?.setAttribute('style', 'display:none');
+    document.getElementById('modal-backdrop')?.classList.remove('show');
+}
+
 document.addEventListener('player-tick', () => {
     refresh();
 });
@@ -294,6 +308,7 @@ centerButton?.addEventListener('click', () => {
 });
 
 document.getElementById("gpxFile")?.addEventListener('change', () => {
+    closeModal();
     let reader = new FileReader();
     reader.addEventListener("load", () => {
         createActivityFromTextResult(<any>reader.result);
@@ -320,7 +335,19 @@ document.getElementById('activities')?.addEventListener('click', (e: MouseEvent)
         }
 });
 
+document.getElementById('close-modal')?.addEventListener('click', (e: MouseEvent) => {
+    closeModal();
+});
+
+document.getElementById('upload-gpx-from-modal')?.addEventListener('click', (e: MouseEvent) => {
+    document.getElementById('gpxFile')?.click();
+});
+
 player.restartTimer();
 refresh();
 
 document.getElementById('panel')?.setAttribute('style', 'display:block');
+
+if (!(<any>params)['load']) {
+    showModal();
+}

@@ -9,6 +9,29 @@
 
 <body>
     <div id="box">
+
+        <div id="modal" class="modal" style="display: none">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLongTitle">Welcome to ReplayRun.com!</h5>
+                    </div>
+                    <div class="modal-body">
+                        Upload GPX files to see how they compare. 
+                        Replay how a race transpired between friends and rivals. Compare your race to previous years.
+                        Review how your pace changed during the race. <br/>
+                        Enjoy!
+                    </div>
+                    <div class="modal-footer">
+                        <button id="close-modal" type="button" class="btn btn-secondary">Close</button>
+                        <button id="upload-gpx-from-modal" type="button" class="btn btn-primary">Upload a GPX File...</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="modal-backdrop" class="modal-backdrop fade" style="display: none;"></div>
+
         <div id="panel" style="display: none;">
 
             <div id="activities"></div>
@@ -66,11 +89,11 @@
 
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-4TW4D8Z0XG"></script>
 <script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
 
-  gtag('config', 'G-4TW4D8Z0XG');
+    gtag('config', 'G-4TW4D8Z0XG');
 </script>
 
 </html>
