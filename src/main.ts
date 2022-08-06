@@ -85,9 +85,13 @@ map.add(pointLayer);
 
 let colors = [
     [200, 0, 0],
-    [200, 200, 0],
+    [0, 200, 0],
     [0, 0, 200],
-    [0, 200, 0]
+    [200, 120, 0],
+    [100, 0, 0],
+    [0, 100, 0],
+    [0, 0, 100],
+    [255, 165, 0]
 ];
 
 let getButton = (id: string): HTMLButtonElement => {
