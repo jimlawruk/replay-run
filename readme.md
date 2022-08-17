@@ -1,6 +1,6 @@
-# ReplayRun
+# Replay Run
 
-## Replay your GPX runs or rides on a map.
+## Replay your running and riding GPS recorded activities on a map. Compare your activities to previous days or your rivals.
 
 ### Setup:
 
