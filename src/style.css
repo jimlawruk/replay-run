@@ -85,8 +85,9 @@ body,
     color: orange;
 }
 
-#speed-controls {
+#panel #speed-controls {
     font-weight: bold;
+    margin-bottom: 0px;
 }
 
 #speed-controls .x {
@@ -107,10 +108,11 @@ body,
     min-width: 70px;
     padding-left: 7px;
     padding-right: 7px;
-    font-size: 2em;
+    font-size: 1.5em;
     color: yellow;
     max-width: 135px;
     margin-left: 15px;
+    line-height: 31px;
 }
 
 #controls button {
