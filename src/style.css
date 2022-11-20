@@ -46,7 +46,7 @@ body,
 }
 
 #gpxFile {
-    max-width: 100px;
+    display: none;
 }
 
 #activities>div {

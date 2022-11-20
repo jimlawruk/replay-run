@@ -75,6 +75,10 @@ export class Main extends Base {
       this.refresh();
     });
 
+    this.addClickHandler('upload', () => {
+      this.getById('gpxFile').click();
+    });
+
     this.addClickHandler('clear', () => {
       this.player.clearActivities();
       this.refreshActivities();
