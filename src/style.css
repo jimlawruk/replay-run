@@ -45,6 +45,42 @@ body,
     border-radius: 3px;
 }
 
+#activities button.settings {
+    border-width: 0px;
+    background-color: white;
+}
+
+#activities button.settings:hover {
+    background-color: #ddd;
+    border-radius: 8px;
+}
+
+#activities td .settings-list {
+    display: none;
+    position: absolute;
+    right: 0px;
+    width: 100px;
+    margin-bottom: 36px;
+    border-style: solid;
+    padding-bottom: 10px;
+    background-color: white;
+    border-width: 1px;
+    padding: 5px 0px 5px 0px;
+}
+
+#activities td .settings-list button {
+    border-width: 0px;
+    background-color: white;
+    width: 100%;
+    text-align: left;
+    padding-left: 10px;
+    font-size: 13px;
+}
+
+#activities td .settings-list button:hover {
+    background-color: #ddd;
+}
+
 #gpxFile {
     display: none;
 }

@@ -31,8 +31,8 @@ export class Main extends Base {
       this.player.activities = [Activities.Activity1, Activities.Activity2];
       start = this.player.activities[0].points[0];
       zoom = 16;
-    } else if ((<any>params)['load'] === 'drchhbgmile2022') {
-      this.loadGpxFromUrl('Harrisburg_Mile_2022_Ty.gpx');
+    } else if ((<any>params)['load'] === 'jim') {
+      this.loadGpxFromUrl('jim.gpx');
       this.loadGpxFromUrl('Harrisburg_Mile_2022_Cem.gpx');
       this.loadGpxFromUrl('Harrisburg_Mile_2022_Jim.gpx');
       this.loadGpxFromUrl('Harrisburg_Mile_2022_David.gpx');
@@ -230,6 +230,13 @@ export class Main extends Base {
                     <td></td>
                     <td></td>
                     <td></td>
+                    <td>
+                      <button class="settings" id="settings-button-${activity.id}"><i class="bi bi-gear"></i></button>                      
+                        <div id="settings-list-${activity.id}" class="settings-list">
+                            <button id="append-activity-${activity.id}">Append</button>
+                            <button id="delete-activity-${activity.id}">Delete</button>
+                        </div>                     
+                    </td>
                 </tr>`;
     }
     html = `<table class="table">
@@ -240,11 +247,18 @@ export class Main extends Base {
                   <th>Miles</th>
                   <th>Pace</th>
                   <th>Time</th>
+                  <th>Edit</th>
                 </thhead>
                 <tbody>${html}</tboday>
               </table>`;
     (<any>this.getById('activities')).innerHTML = html;
     this.enableDisableButtons();
+    for (let i = 0; i < this.player.activities.length; i++) {
+      let activity = this.player.activities[i];
+      this.getById(`settings-button-${activity.id}`).addEventListener('click', () => {
+        this.toggleSettings(activity.id!);
+      })
+    }
   };
 
   setActivityText() {
@@ -348,6 +362,13 @@ export class Main extends Base {
     this.getById('modal')?.classList.remove('show');
     this.getById('modal-backdrop')?.setAttribute('style', 'display:none');
     this.getById('modal-backdrop')?.classList.remove('show');
+  }
+
+  toggleSettings(activityId: number) {
+    const id = `settings-list-${activityId}`;
+    const settings = this.getById(id);
+    const visible = settings?.style?.display === 'block';
+    this.showOrHide(id, !visible);
   }
 
 }
