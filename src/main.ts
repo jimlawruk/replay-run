@@ -216,7 +216,13 @@ export class Main extends Base {
 
   refreshActivities() {
     this.rebuildActivityTable();
+    this.addActivitiesSettingsHandlers();
     this.enableDisableButtons();
+  }
+
+  deleteActivity(id: number) {
+    this.player.deleteActivity(id);
+    this.refreshActivities();
   }
 
   rebuildActivityTable() {
@@ -233,7 +239,6 @@ export class Main extends Base {
                     <td>
                       <button class="settings" id="settings-button-${activity.id}"><i class="bi bi-gear"></i></button>                      
                         <div id="settings-list-${activity.id}" class="settings-list">
-                            <button id="append-activity-${activity.id}">Append</button>
                             <button id="delete-activity-${activity.id}">Delete</button>
                         </div>                     
                     </td>
@@ -253,13 +258,18 @@ export class Main extends Base {
               </table>`;
     (<any>this.getById('activities')).innerHTML = html;
     this.enableDisableButtons();
-    for (let i = 0; i < this.player.activities.length; i++) {
-      let activity = this.player.activities[i];
+  };
+
+  addActivitiesSettingsHandlers() {
+    for (let activity of this.player.activities) {
       this.getById(`settings-button-${activity.id}`).addEventListener('click', () => {
         this.toggleSettings(activity.id!);
-      })
+      });
+      this.addClickHandler(`delete-activity-${activity.id}`, () => {
+        this.deleteActivity(activity.id!);
+      });
     }
-  };
+  }
 
   setActivityText() {
     for (let i = 0; i < this.player.activities.length; i++) {

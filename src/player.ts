@@ -21,6 +21,11 @@ export class Player {
         this.reset();
     }
 
+    deleteActivity(id: number) {
+        this.activities = this.activities.filter(x => x.id !== id);
+        this.reset;
+    }
+
     reset() {
         this.toggleStartPause(true);
         this.seconds = 0;
