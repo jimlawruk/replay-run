@@ -19,6 +19,7 @@ export class Main extends Base {
   map?: Map;
   colors?: number[][];
   pointLayer?: GraphicsLayer;
+  appendActivityId?: number;
 
   async run() {
     const params = new Proxy(new URLSearchParams(window.location.search), {
@@ -135,7 +136,11 @@ export class Main extends Base {
       this.closeModal();
       let reader = new FileReader();
       reader.addEventListener("load", () => {
-        this.createActivityFromTextResult(<any>reader.result);
+        if (this.appendActivityId) {
+          this.appendActivityFromTextResult(this.appendActivityId, <any>reader.result);
+        } else {
+          this.createActivityFromTextResult(<any>reader.result);
+        }
       }, false);
       const files = (this.getById('gpxFile') as HTMLInputElement).files;
       if (files) {
@@ -178,11 +183,7 @@ export class Main extends Base {
 
   createActivityFromTextResult(textResult: string) {
     const activity = this.gpxParser.getActivitiesFromResult(textResult);
-    const existingIds = this.player.activities?.map(x => x.id || 0);
-    const maxId = existingIds.length ? Math.max(...existingIds) : 0;
-    activity.id = maxId + 1;
-    this.player.activities.push(activity);
-    this.player.reset();
+    this.player.addActivity(activity);
     this.refreshActivities();
     this.refresh();
     if (this.player.activities.length === 1) {
@@ -190,6 +191,13 @@ export class Main extends Base {
     }
     this.gaEvent('load_activity');
   };
+
+  appendActivityFromTextResult(activityId: number, textResult: string) {
+    const activityResult = this.gpxParser.getActivitiesFromResult(textResult);
+    this.player.appendActivity(activityId, activityResult);
+    this.appendActivityId = undefined;
+    this.refresh();
+  }
 
   loadGpxFromUrl(url: string) {
     const request = new XMLHttpRequest();
@@ -220,6 +228,11 @@ export class Main extends Base {
     this.enableDisableButtons();
   }
 
+  startAppendToActivity(id: number) {
+    this.getById('gpxFile').click();
+    this.appendActivityId = id;
+  }
+
   deleteActivity(id: number) {
     this.player.deleteActivity(id);
     this.refreshActivities();
@@ -239,6 +252,7 @@ export class Main extends Base {
                     <td>
                       <button class="settings" id="settings-button-${activity.id}"><i class="bi bi-gear"></i></button>                      
                         <div id="settings-list-${activity.id}" class="settings-list">
+                            <button id="append-activity-${activity.id}">Append</button>
                             <button id="delete-activity-${activity.id}">Delete</button>
                         </div>                     
                     </td>
@@ -264,6 +278,10 @@ export class Main extends Base {
     for (let activity of this.player.activities) {
       this.getById(`settings-button-${activity.id}`).addEventListener('click', () => {
         this.toggleSettings(activity.id!);
+      });
+      this.addClickHandler(`append-activity-${activity.id}`, () => {
+        this.startAppendToActivity(activity.id!);
+        this.showOrHide(`settings-list-${activity.id}`, false);
       });
       this.addClickHandler(`delete-activity-${activity.id}`, () => {
         this.deleteActivity(activity.id!);
