@@ -23,8 +23,8 @@ body,
 
 #panel {
     position: absolute;
-    top: 20px;
-    right: 20px;
+    top: 0px;
+    right: 0px;
     flex: 0 1 auto;
     background-color: #fff;
     border-radius: 5px;
@@ -79,6 +79,10 @@ body,
 
 #activities td .settings-list button:hover {
     background-color: #ddd;
+}
+
+#activities td {
+    padding: 3px;
 }
 
 #gpxFile {
@@ -155,7 +159,7 @@ body,
     cursor: pointer;
 }
 
-@media screen and (max-width: 40em) {
+@media screen and (max-width: 70em) {
 
     #panel {
         position: static;
