@@ -23,8 +23,8 @@ body,
 
 #panel {
     position: absolute;
-    top: 20px;
-    right: 20px;
+    top: 0px;
+    right: 0px;
     flex: 0 1 auto;
     background-color: #fff;
     border-radius: 5px;
@@ -43,6 +43,46 @@ body,
 #activities {
     background-color: white;
     border-radius: 3px;
+}
+
+#activities button.settings {
+    border-width: 0px;
+    background-color: white;
+}
+
+#activities button.settings:hover {
+    background-color: #ddd;
+    border-radius: 8px;
+}
+
+#activities td .settings-list {
+    display: none;
+    position: absolute;
+    right: 0px;
+    width: 100px;
+    margin-bottom: 36px;
+    border-style: solid;
+    padding-bottom: 10px;
+    background-color: white;
+    border-width: 1px;
+    padding: 5px 0px 5px 0px;
+}
+
+#activities td .settings-list button {
+    border-width: 0px;
+    background-color: white;
+    width: 100%;
+    text-align: left;
+    padding-left: 10px;
+    font-size: 13px;
+}
+
+#activities td .settings-list button:hover {
+    background-color: #ddd;
+}
+
+#activities td {
+    padding: 3px;
 }
 
 #gpxFile {
@@ -119,7 +159,21 @@ body,
     cursor: pointer;
 }
 
-@media screen and (max-width: 40em) {
+#panel > #date-time-and-location {
+    display: inline-block;
+    margin-top: 10px;
+    margin-bottom: 0px;
+}
+
+#date-time-and-location #lat-long-label, #date-time-and-location #current-time-label { 
+    margin-right: 5px;
+}
+
+#date-time-and-location #current-time-label {
+    margin-left: 15px;
+}
+
+@media screen and (max-width: 70em) {
 
     #panel {
         position: static;
@@ -173,4 +227,9 @@ body,
         padding: 2px 5px 2px 5px;
         line-height: 34px;
     }
+
+    #panel > #date-time-and-location {
+        display: none;
+    }
+    
 }
