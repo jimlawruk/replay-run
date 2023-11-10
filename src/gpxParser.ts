@@ -15,9 +15,11 @@ export class GPXParser {
         }
         let title = xmlDoc.getElementsByTagName('name')[0].innerHTML;
         let previousTime: Date | null = null;
+        let previousLonLat: Array<number> | null = null;
         for (let i = 0; i < trkPoints.length; i++) {
             const lon = this.getFloatVal(trkPoints[i], 'lon');
             const lat = this.getFloatVal(trkPoints[i], 'lat');
+            const currentLonLat = [lon, lat];
             const time = this.getTimeVal(trkPoints[i]);
             if (previousTime && time) {
                 intervalTime = (time!.valueOf() - previousTime!.valueOf()) / 1000;
@@ -25,11 +27,13 @@ export class GPXParser {
             if (i === 0) {
                 longLatArray.push([lon, lat]);
             } else {
-                for (let j = 0; j < intervalTime; j++) {
-                    longLatArray.push([lon, lat]);
+                const derivedLonLats = this.getDerivedLatLongs(previousLonLat!, currentLonLat, intervalTime);
+                for (let j = 0; j < derivedLonLats.length; j++) {
+                    longLatArray.push(derivedLonLats[j]);
                 }
             }
             previousTime = time;
+            previousLonLat = [lon, lat];
         }
         return { title: title, points: longLatArray, visible: true };
     }
@@ -58,8 +62,30 @@ export class GPXParser {
             if (node.nodeName === key) {
                 return (<any>node).innerHTML;
             }
-        }        
+        }
         return null;
+    }
+
+    getDerivedLatLongs(previousLonLat: Array<number>, currentLonLat: Array<number>, intervalTime: number) {
+        const longLatArray: Array<Array<number>> = [];
+        const longSequence = this.getSequenceOfNumbers(previousLonLat[0], currentLonLat[0], intervalTime);
+        const latSequence = this.getSequenceOfNumbers(previousLonLat[1], currentLonLat[1], intervalTime);
+        for (let j = 0; j < intervalTime; j++) {
+            longLatArray.push([longSequence[j], latSequence[j]]);
+        }
+        return longLatArray;
+    }
+
+    getSequenceOfNumbers(start: number, end: number, count: number) {
+        const totalDiff = end - start;
+        const average = totalDiff / count;
+        let i;
+        const sequence: Array<number> = [];
+        for (i = 1; i <= count; i++) {
+            const newValue = start + (average * i);
+            sequence.push(newValue);
+        }
+        return sequence;
     }
 
 }
