@@ -16,6 +16,7 @@ export class GPXParser {
         let title = xmlDoc.getElementsByTagName('name')[0].innerHTML;
         let previousTime: Date | null = null;
         let previousLonLat: Array<number> | null = null;
+        let startDateTime: Date;
         for (let i = 0; i < trkPoints.length; i++) {
             const lon = this.getFloatVal(trkPoints[i], 'lon');
             const lat = this.getFloatVal(trkPoints[i], 'lat');
@@ -26,6 +27,9 @@ export class GPXParser {
             }
             if (i === 0) {
                 longLatArray.push([lon, lat]);
+                if (time) {
+                    startDateTime = time;
+                }
             } else {
                 const derivedLonLats = this.getDerivedLatLongs(previousLonLat!, currentLonLat, intervalTime);
                 for (let j = 0; j < derivedLonLats.length; j++) {
@@ -35,7 +39,7 @@ export class GPXParser {
             previousTime = time;
             previousLonLat = [lon, lat];
         }
-        return { title: title, points: longLatArray, visible: true };
+        return { title: title, points: longLatArray, visible: true, startDateTime: startDateTime! };
     }
 
     getFloatVal(element: Element, key: string) {

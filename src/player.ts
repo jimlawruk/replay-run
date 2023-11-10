@@ -5,6 +5,8 @@ export class Player {
     activities: Activity[] = [];
     multiplier: number = 10;
     seconds: number = 0;
+    startDateTime?: Date;
+    currentDateTime?: Date;
     maxSecondsOfAnyActivity: number = 0;
     timerEventName: string = 'player-tick';
     timerEvent: Event = new Event(this.timerEventName);
@@ -24,6 +26,8 @@ export class Player {
     reset() {
         this.toggleStartPause(true);
         this.seconds = 0;
+        this.currentDateTime = undefined;
+        this.startDateTime = undefined;
         this.refreshCalculations();
     }
 
@@ -40,6 +44,7 @@ export class Player {
     refreshCalculations() {
         this.resetActivityCounters();
         this.calculateDistances();
+        this.setCurrentDateTime();
     }
 
     restartTimer() {
@@ -57,6 +62,7 @@ export class Player {
                 if (this.seconds % 10 === 0 || this.done) {
                     this.calculateDistances();
                 }
+                this.setCurrentDateTime();
                 document.dispatchEvent(this.timerEvent);
                 if (this.done) {
                     clearInterval(this.timer);
@@ -176,6 +182,14 @@ export class Player {
             } else if (!this.started) {
                 activity.timeDisplay = this.getMinutesSeconds(activity.points.length - 1);
             }
+        }
+    }
+
+    setCurrentDateTime() {
+        if (this.startDateTime) {
+            var newDate = new Date(this.startDateTime);
+            newDate.setSeconds(this.startDateTime?.getSeconds() + this.seconds);
+            this.currentDateTime = newDate;
         }
     }
 
