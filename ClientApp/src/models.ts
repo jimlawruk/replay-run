@@ -7,5 +7,6 @@ export interface Activity {
     pace?: number;
     averagePace?: string;
     timeDisplay?: string;
+    startDateTime?: Date;
     visible?: boolean;
 }
