@@ -183,7 +183,7 @@ export class Main extends Base {
     const activity = this.gpxParser.getActivitiesFromResult(textResult);
     const existingIds = this.player.activities?.map((x) => x.id || 0);
     const maxId = existingIds.length ? Math.max(...existingIds) : 0;
-    activity.id = maxId + 1;    
+    activity.id = maxId + 1;
     this.player.activities.push(activity);
     this.player.reset();
     if (!this.player.startDateTime && activity.startDateTime) {
@@ -228,7 +228,7 @@ export class Main extends Base {
   }
 
   startAppendToActivity(id: number) {
-    this.getById('gpxFile').click();
+    this.getById("gpxFile").click();
     this.appendActivityId = id;
   }
 
@@ -242,8 +242,8 @@ export class Main extends Base {
     for (let i = 0; i < this.player.activities.length; i++) {
       let activity = this.player.activities[i];
       html += `<tr id="tr-${activity.id}">
-                    <td><input type="checkbox" id="toggle-${activity.id}" ${activity.visible ? 'checked' : ''}/></td>
-                    <td class="icon"><span style="background-color: rgb(${this.colors![i].join(',')})"></td>
+                    <td><input type="checkbox" id="toggle-${activity.id}" ${activity.visible ? "checked" : ""}/></td>
+                    <td class="icon"><span style="background-color: rgb(${this.colors![i].join(",")})"></td>
                     <td>${activity.title}</td>
                     <td></td>
                     <td></td>
@@ -271,11 +271,11 @@ export class Main extends Base {
               </table>`;
     (<any>this.getById("activities")).innerHTML = html;
     this.enableDisableButtons();
-  };
+  }
 
   addActivitiesSettingsHandlers() {
     for (let activity of this.player.activities) {
-      this.getById(`settings-button-${activity.id}`).addEventListener('click', () => {
+      this.getById(`settings-button-${activity.id}`).addEventListener("click", () => {
         this.toggleSettings(activity.id!);
       });
       this.addClickHandler(`append-activity-${activity.id}`, () => {
@@ -322,21 +322,22 @@ export class Main extends Base {
   setTimeText() {
     this.getById("time").innerHTML = this.player.getMinutesSeconds(this.player.seconds);
     if (this.player.currentDateTime) {
-      this.showOrHide("current-time-label", true, 'inline');
+      this.showOrHide("current-time-label", true, "inline");
       this.getById("current-time-text").innerHTML = this.player.currentDateTime.toLocaleTimeString();
     } else {
-      this.showOrHide("current-time-label", false, 'inline');
+      this.showOrHide("current-time-label", false, "inline");
       this.getById("current-time-text").innerHTML = "";
     }
   }
 
   setLatLongText() {
     if (this.player.activities.length) {
-      this.showOrHide("lat-long-label", true, 'inline');
+      this.showOrHide("lat-long-label", true, "inline");
       const firstActivity = this.player.activities[0];
-      const point = firstActivity.points[this.player.seconds];
-      this.getById("lat-long-text").innerHTML =
-        point[0].toFixed(5).toString() + ", " + point[1].toFixed(5).toString();
+      if (firstActivity.points.length > this.player.seconds) {
+        const point = firstActivity.points[this.player.seconds];
+        this.getById("lat-long-text").innerHTML = point[0].toFixed(5).toString() + ", " + point[1].toFixed(5).toString();
+      }
     } else {
       this.showOrHide("lat-long-label", false);
       this.getById("lat-long-text").innerHTML = "";
@@ -411,10 +412,9 @@ export class Main extends Base {
     this.getById("modal-backdrop")?.classList.remove("show");
   }
   toggleSettings(activityId: number) {
-      const id = `settings-list-${activityId}`;
-      const settings = this.getById(id);
-      const visible = settings?.style?.display === 'block';
-      this.showOrHide(id, !visible);
-    }
-
+    const id = `settings-list-${activityId}`;
+    const settings = this.getById(id);
+    const visible = settings?.style?.display === "block";
+    this.showOrHide(id, !visible);
+  }
 }
