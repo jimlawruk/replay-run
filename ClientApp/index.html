@@ -31,6 +31,28 @@
             </div>
         </div>
 
+        <div id="modal-enter-time" class="modal" style="display: none">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLongTitle">GPX without timestamps</h5>
+                    </div>
+                    <div class="modal-body">
+                        <div class="text">This GPX file does not have timestamps. Enter the time elapsed.</div>
+                        <div class="enter-time-input-container">
+                            Hours: <input id="hours" type="number" min="0" max="100">
+                            Minutes: <input id="minutes" type="number" min="0" max="59"> 
+                            Seconds: <input id="seconds" type="number" min="0" max="59">  
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button id="close-modal-enter-time" type="button" class="btn btn-secondary">Cancel</button>
+                        <button id="process-entered-time-button" type="button" class="btn btn-primary">Continue...</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div id="modal-backdrop" class="modal-backdrop fade" style="display: none;"></div>
 
         <div id="panel" style="display: none;">

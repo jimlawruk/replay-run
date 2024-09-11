@@ -173,6 +173,10 @@ body,
     margin-left: 15px;
 }
 
+#modal-enter-time input {
+    width: 43px;
+}
+
 @media screen and (max-width: 70em) {
 
     #panel {

@@ -11,6 +11,7 @@ import { Base } from "./base";
 import "bootstrap/dist/css/bootstrap.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import "./style.css";
+import { Activity } from "./models";
 
 export class Main extends Base {
   player: Player = new Player();
@@ -20,6 +21,7 @@ export class Main extends Base {
   colors?: number[][];
   pointLayer?: GraphicsLayer;
   appendActivityId?: number;
+  currentFileText?: string;
 
   async run() {
     const params = new Proxy(new URLSearchParams(window.location.search), {
@@ -131,12 +133,12 @@ export class Main extends Base {
     });
 
     this.getById("gpxFile")?.addEventListener("change", () => {
-      this.closeModal();
+      this.closeModal("modal");
       let reader = new FileReader();
       reader.addEventListener(
         "load",
         () => {
-          this.createActivityFromTextResult(<any>reader.result);
+          this.processNewGPX(<any>reader.result);
         },
         false
       );
@@ -162,11 +164,20 @@ export class Main extends Base {
     });
 
     this.addClickHandler("close-modal", () => {
-      this.closeModal();
+      this.closeModal("modal");
+    });
+
+    this.addClickHandler("close-modal-enter-time", () => {
+      this.closeModal("modal-enter-time");
     });
 
     this.addClickHandler("upload-gpx-from-modal", () => {
       this.getById("gpxFile").click();
+    });
+
+    this.addClickHandler("process-entered-time-button", () => {
+      this.closeModal("modal-enter-time");
+      this.processNewGPXWithTimestamps()
     });
 
     this.player.restartTimer();
@@ -175,12 +186,39 @@ export class Main extends Base {
     this.showOrHide("panel", true);
 
     if (!(<any>params)["load"]) {
-      this.showModal();
+      this.showModal("modal");
     }
   }
 
-  createActivityFromTextResult(textResult: string) {
-    const activity = this.gpxParser.getActivitiesFromResult(textResult);
+  processNewGPX(fileText: string) {
+    this.currentFileText = fileText;
+    const hasTimestamps = this.gpxParser.doesGPXHaveTimestamps(fileText);
+    if (hasTimestamps) {
+      this.createActivityFromTextResult(fileText);
+    } else if (hasTimestamps === false) {
+      this.getInputById("hours").focus();
+      this.getInputById("hours").value = "0";
+      this.getInputById("minutes").value = "0";
+      this.getInputById("seconds").value = "0";
+      this.showModal("modal-enter-time");
+    }
+  }
+
+  processNewGPXWithTimestamps() {
+    const hours = parseInt(this.getInputById("hours").value);
+    const minutes = parseInt(this.getInputById("minutes").value);
+    const seconds = parseInt(this.getInputById("seconds").value);
+    const totalSeconds = hours * 3660 + minutes * 60 + seconds;
+    this.createActivityFromTextResult(this.currentFileText!, totalSeconds);
+  }
+
+  createActivityFromTextResult(textResult: string, seconds: number | null = null) {
+    let activity: Activity;
+    if (seconds) {
+      activity = this.gpxParser.getActivitiesFromResultWithoutTimestamps(textResult, seconds);
+    } else {
+      activity = this.gpxParser.getActivitiesFromResult(textResult);
+    }
     const existingIds = this.player.activities?.map((x) => x.id || 0);
     const maxId = existingIds.length ? Math.max(...existingIds) : 0;
     activity.id = maxId + 1;
@@ -398,16 +436,16 @@ export class Main extends Base {
     return this.getById("center")?.classList.contains("active");
   }
 
-  showModal() {
-    this.getById("modal")?.setAttribute("style", "display:block");
-    this.getById("modal")?.classList.add("show");
+  showModal(id: string) {
+    this.getById(id)?.setAttribute("style", "display:block");
+    this.getById(id)?.classList.add("show");
     this.getById("modal-backdrop")?.setAttribute("style", "display:block");
     this.getById("modal-backdrop")?.classList.add("show");
   }
 
-  closeModal() {
-    this.getById("modal")?.setAttribute("style", "display:none");
-    this.getById("modal")?.classList.remove("show");
+  closeModal(id: string) {
+    this.getById(id)?.setAttribute("style", "display:none");
+    this.getById(id)?.classList.remove("show");
     this.getById("modal-backdrop")?.setAttribute("style", "display:none");
     this.getById("modal-backdrop")?.classList.remove("show");
   }
