@@ -34,6 +34,9 @@ export class GPXParser {
       if (previousTime && time) {
         intervalTime = (time!.valueOf() - previousTime!.valueOf()) / 1000;
       }
+      if (intervalTime >= 10) {
+        intervalTime = 1; // assume a stopped watch
+      }
       if (i === 0) {
         longLatArray.push([lon, lat]);
         if (time) {
