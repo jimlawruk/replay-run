@@ -208,7 +208,7 @@ export class Main extends Base {
     const hours = parseInt(this.getInputById("hours").value);
     const minutes = parseInt(this.getInputById("minutes").value);
     const seconds = parseInt(this.getInputById("seconds").value);
-    const totalSeconds = hours * 3660 + minutes * 60 + seconds;
+    const totalSeconds = hours * 3600 + minutes * 60 + seconds;
     this.createActivityFromTextResult(this.currentFileText!, totalSeconds);
   }
 
