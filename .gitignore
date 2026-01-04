@@ -24,3 +24,8 @@ dist-ssr
 *.sw?
 *.csv
 *.gpx
+.vs
+.user
+
+bin
+obj
