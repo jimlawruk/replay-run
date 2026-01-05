@@ -20,6 +20,7 @@ export class Main extends Base {
   map?: Map;
   colors?: number[][];
   pointLayer?: GraphicsLayer;
+  polylineLayer?: GraphicsLayer;
   appendActivityId?: number;
   currentFileText?: string;
 
@@ -61,6 +62,9 @@ export class Main extends Base {
     this.pointLayer = new GraphicsLayer({});
     map.add(this.pointLayer);
 
+    this.polylineLayer = new GraphicsLayer({});
+    map.add(this.polylineLayer);
+
     this.colors = [
       [200, 0, 0],
       [0, 200, 0],
@@ -78,6 +82,17 @@ export class Main extends Base {
 
     this.addClickHandler("upload", () => {
       this.getById("gpxFile").click();
+    });
+
+    const showRouteButton = this.getById("show-route");
+    this.addClickHandler("show-route", () => {
+      if (showRouteButton!.classList.contains("active")) {
+        showRouteButton!.classList.remove("active");
+      } else {
+        showRouteButton!.classList.add("active");
+      }
+      this.refresh();
+      this.gaEvent("toggle_route");
     });
 
     this.addClickHandler("clear", () => {
@@ -384,11 +399,17 @@ export class Main extends Base {
 
   refreshGraphics() {
     this.pointLayer!.removeAll();
+    this.polylineLayer!.removeAll();
+    const showRoute = this.getById("show-route")?.classList.contains("active");
     for (let i = 0; i < this.player.activities.length; i++) {
       let activity = this.player.activities[i];
       if (activity.visible && activity.points?.length > this.player.seconds) {
         const graphic = MapUtils.getPointGraphic(activity.points[this.player.seconds], this.colors![i]);
         this.pointLayer!.add(graphic);
+      }
+      if (activity.visible && showRoute && activity.points?.length > 0) {
+        const polylineGraphic = MapUtils.getPolylineGraphic(activity.points, this.colors![i], 0.3);
+        this.polylineLayer!.add(polylineGraphic);
       }
     }
   }

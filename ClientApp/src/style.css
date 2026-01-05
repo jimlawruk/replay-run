@@ -89,6 +89,10 @@ body,
     display: none;
 }
 
+#activities-controls button.show-route.active {
+    color: orange;
+}
+
 #activities>div {
     margin-bottom: 10px;
 }

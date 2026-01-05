@@ -1,6 +1,7 @@
 import Graphic from "@arcgis/core/Graphic";
 import GraphicsLayer from "@arcgis/core/layers/GraphicsLayer";
 import Point from "@arcgis/core/geometry/Point";
+import Polyline from "@arcgis/core/geometry/Polyline";
 import SpatialReference from "@arcgis/core/geometry/SpatialReference";
 
 export class MapUtils {
@@ -73,5 +74,21 @@ export class MapUtils {
     static getPointGraphic(pointArray: Array<number>, colorArray: Array<number>) {
         const graphicDefinition = this.getPointGraphicDefinition(pointArray, colorArray);
         return new Graphic(graphicDefinition);
+    }
+
+    static getPolylineGraphic(pointsArray: Array<Array<number>>, colorArray: Array<number>, opacity: number) {
+        const polyline = new Polyline({
+            paths: [pointsArray],
+            spatialReference: new SpatialReference({ wkid: 4326 })
+        });
+        const symbol = {
+            type: "simple-line",
+            color: [...colorArray, opacity],
+            width: 3
+        };
+        return new Graphic({
+            geometry: polyline,
+            symbol: symbol
+        });
     }
 }
