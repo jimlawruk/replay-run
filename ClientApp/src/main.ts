@@ -200,6 +200,64 @@ export class Main extends Base {
 
     this.showOrHide("panel", true);
 
+    // Add drag and drop support for GPX files
+    const mapContainer = this.getById("map-container");
+    const viewDiv = this.getById("viewDiv");
+    const dropOverlay = this.getById("drop-overlay");
+    let dragCounter = 0;
+
+    mapContainer?.addEventListener("dragenter", (e: DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      dragCounter++;
+      if (e.dataTransfer) {
+        e.dataTransfer.dropEffect = "copy";
+        viewDiv!.style.opacity = "0.7";
+        dropOverlay!.classList.add("show");
+      }
+    });
+
+    mapContainer?.addEventListener("dragover", (e: DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (e.dataTransfer) {
+        e.dataTransfer.dropEffect = "copy";
+      }
+    });
+
+    mapContainer?.addEventListener("dragleave", (e: DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      dragCounter--;
+      if (dragCounter === 0) {
+        viewDiv!.style.opacity = "1";
+        dropOverlay!.classList.remove("show");
+      }
+    });
+
+    mapContainer?.addEventListener("drop", (e: DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      dragCounter = 0;
+      viewDiv!.style.opacity = "1";
+      dropOverlay!.classList.remove("show");
+      this.closeModal("modal");
+      
+      const files = e.dataTransfer?.files;
+      if (files && files.length > 0) {
+        for (let i = 0; i < files.length; i++) {
+          const file = files[i];
+          if (file.name.toLowerCase().endsWith(".gpx")) {
+            const reader = new FileReader();
+            reader.addEventListener("load", () => {
+              this.processNewGPX(<any>reader.result);
+            }, false);
+            reader.readAsText(file);
+          }
+        }
+      }
+    });
+
     if (!(<any>params)["load"]) {
       this.showModal("modal");
     }
