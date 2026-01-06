@@ -408,7 +408,7 @@ export class Main extends Base {
         this.pointLayer!.add(graphic);
       }
       if (activity.visible && showRoute && activity.points?.length > 0) {
-        const polylineGraphic = MapUtils.getPolylineGraphic(activity.points, this.colors![i], 0.3);
+        const polylineGraphic = MapUtils.getPolylineGraphic(activity.points, this.colors![i], 0.7);
         this.polylineLayer!.add(polylineGraphic);
       }
     }
