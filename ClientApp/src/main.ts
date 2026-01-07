@@ -348,6 +348,22 @@ export class Main extends Base {
     this.refreshActivities();
   }
 
+  zoomToActivity(id: number) {
+    const activity = this.player.activities.find(a => a.id === id);
+    if (activity && activity.points.length > 0) {
+      const startPoint = activity.points[0];
+      (<any>this.view).goTo(
+        {
+          center: [startPoint[0], startPoint[1]],
+          zoom: 15
+        },
+        {
+          duration: 1000
+        }
+      );
+    }
+  }
+
   rebuildActivityTable() {
     let html = "";
     for (let i = 0; i < this.player.activities.length; i++) {
@@ -362,6 +378,7 @@ export class Main extends Base {
                     <td>
                       <button class="settings" id="settings-button-${activity.id}"><i class="bi bi-gear"></i></button>                      
                         <div id="settings-list-${activity.id}" class="settings-list">
+                            <button id="zoom-activity-${activity.id}">Zoom To</button>
                             <button id="append-activity-${activity.id}">Append</button>
                             <button id="delete-activity-${activity.id}">Delete</button>
                         </div>                     
@@ -388,6 +405,10 @@ export class Main extends Base {
     for (let activity of this.player.activities) {
       this.getById(`settings-button-${activity.id}`).addEventListener("click", () => {
         this.toggleSettings(activity.id!);
+      });
+      this.addClickHandler(`zoom-activity-${activity.id}`, () => {
+        this.zoomToActivity(activity.id!);
+        this.showOrHide(`settings-list-${activity.id}`, false);
       });
       this.addClickHandler(`append-activity-${activity.id}`, () => {
         this.startAppendToActivity(activity.id!);
