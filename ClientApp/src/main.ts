@@ -2,6 +2,7 @@ import BasemapToggle from "@arcgis/core/widgets/BasemapToggle";
 import GraphicsLayer from "@arcgis/core/layers/GraphicsLayer";
 import Map from "@arcgis/core/Map";
 import MapView from "@arcgis/core/views/MapView";
+import { Chart, registerables } from "chart.js";
 import { Activities } from "./activities";
 import { MapUtils } from "./map-utilities";
 import { GPXParser } from "./gpxParser";
@@ -13,6 +14,8 @@ import "bootstrap-icons/font/bootstrap-icons.css";
 import "./style.css";
 import { Activity } from "./models";
 
+Chart.register(...registerables);
+
 export class Main extends Base {
   player: Player = new Player();
   gpxParser: GPXParser = new GPXParser();
@@ -23,6 +26,8 @@ export class Main extends Base {
   polylineLayer?: GraphicsLayer;
   appendActivityId?: number;
   currentFileText?: string;
+  elevationChart?: Chart;
+  currentChartActivityId?: number;
 
   async run() {
     const params = new Proxy(new URLSearchParams(window.location.search), {
@@ -34,7 +39,7 @@ export class Main extends Base {
     if ((<any>params)["default"] === "true") {
       this.player.activities = [Activities.Activity1, Activities.Activity2];
       start = this.player.activities[0].points[0];
-      zoom = 16;
+      zoom = 15;
     } else if ((<any>params)["load"] === "drchhbgmile2022") {
       this.loadGpxFromUrl("Harrisburg_Mile_2022_Ty.gpx");
       this.loadGpxFromUrl("Harrisburg_Mile_2022_Cem.gpx");
@@ -57,7 +62,7 @@ export class Main extends Base {
       view: this.view,
       nextBasemap: "hybrid",
     });
-    this.view.ui.add(basemapToggle, "bottom-left");
+    this.view.ui.add(basemapToggle, "top-left");
 
     this.pointLayer = new GraphicsLayer({});
     map.add(this.pointLayer);
@@ -195,6 +200,21 @@ export class Main extends Base {
       this.processNewGPXWithTimestamps()
     });
 
+    this.addClickHandler("toggle-elevation", () => {
+      const chart = this.getById("elevation-chart");
+      const panel = this.getById("elevation-panel");
+      const button = this.getById("toggle-elevation");
+      if (chart?.style.display === "none") {
+        chart.style.display = "block";
+        panel!.style.height = "200px";
+        button!.innerHTML = '<i class="bi bi-chevron-down"></i>';
+      } else {
+        chart!.style.display = "none";
+        panel!.style.height = "35px";
+        button!.innerHTML = '<i class="bi bi-chevron-up"></i>';
+      }
+    });
+
     this.player.restartTimer();
     this.refresh();
 
@@ -304,7 +324,7 @@ export class Main extends Base {
     this.refreshActivities();
     this.refresh();
     if (this.player.activities.length === 1) {
-      this.center(16);
+      this.center(15);
     }
     this.gaEvent("load_activity");
   }
@@ -336,6 +356,7 @@ export class Main extends Base {
     this.rebuildActivityTable();
     this.addActivitiesSettingsHandlers();
     this.enableDisableButtons();
+    this.updateElevationChart();
   }
 
   startAppendToActivity(id: number) {
@@ -480,15 +501,22 @@ export class Main extends Base {
     this.pointLayer!.removeAll();
     this.polylineLayer!.removeAll();
     const showRoute = this.getById("show-route")?.classList.contains("active");
+    
+    // Add polylines first so they render underneath points
+    for (let i = 0; i < this.player.activities.length; i++) {
+      let activity = this.player.activities[i];
+      if (activity.visible && showRoute && activity.points?.length > 0) {
+        const polylineGraphic = MapUtils.getPolylineGraphic(activity.points, this.colors![i], 0.4);
+        this.polylineLayer!.add(polylineGraphic);
+      }
+    }
+    
+    // Add points second so they render on top
     for (let i = 0; i < this.player.activities.length; i++) {
       let activity = this.player.activities[i];
       if (activity.visible && activity.points?.length > this.player.seconds) {
         const graphic = MapUtils.getPointGraphic(activity.points[this.player.seconds], this.colors![i]);
         this.pointLayer!.add(graphic);
-      }
-      if (activity.visible && showRoute && activity.points?.length > 0) {
-        const polylineGraphic = MapUtils.getPolylineGraphic(activity.points, this.colors![i], 0.7);
-        this.polylineLayer!.add(polylineGraphic);
       }
     }
   }
@@ -514,6 +542,7 @@ export class Main extends Base {
     this.setTimeText();
     this.setLatLongText();
     this.setSpeedText();
+    this.updateElevationChartPosition();
     if (this.isAutoCenterButtonActive()) {
       this.center();
     }
@@ -549,6 +578,260 @@ export class Main extends Base {
     this.getById("modal-backdrop")?.setAttribute("style", "display:none");
     this.getById("modal-backdrop")?.classList.remove("show");
   }
+
+  updateElevationChart() {
+    const elevationPanel = this.getById("elevation-panel");
+    if (this.player.activities.length === 0) {
+      elevationPanel!.style.display = "none";
+      if (this.elevationChart) {
+        this.elevationChart.destroy();
+        this.elevationChart = undefined;
+      }
+      return;
+    }
+
+    // Show the latest activity's elevation
+    const latestActivity = this.player.activities[this.player.activities.length - 1];
+    if (!latestActivity.elevations || latestActivity.elevations.length === 0) {
+      elevationPanel!.style.display = "none";
+      return;
+    }
+
+    elevationPanel!.style.display = "block";
+    this.currentChartActivityId = latestActivity.id;
+
+    // Prepare data: smooth and convert to feet and miles
+    const { dataPoints, maxDistance } = this.prepareElevationData(latestActivity);
+
+    // Calculate min and max elevation to ensure at least 100 feet range
+    const elevationValues = dataPoints.map(p => p.y);
+    const minElevation = Math.min(...elevationValues);
+    const maxElevation = Math.max(...elevationValues);
+    const range = maxElevation - minElevation;
+    
+    let yMin = minElevation;
+    let yMax = maxElevation;
+    
+    if (range < 100) {
+      const center = (minElevation + maxElevation) / 2;
+      yMin = center - 50;
+      yMax = center + 50;
+    }
+    
+    // Round to nearest 10
+    yMin = Math.floor(yMin / 10) * 10;
+    yMax = Math.ceil(yMax / 10) * 10;
+    
+    // Ensure at least 100 feet range after rounding
+    if (yMax - yMin < 100) {
+      const center = (yMin + yMax) / 2;
+      yMin = Math.floor((center - 50) / 10) * 10;
+      yMax = Math.ceil((center + 50) / 10) * 10;
+    }
+
+    // Destroy existing chart if any
+    if (this.elevationChart) {
+      this.elevationChart.destroy();
+    }
+
+    const ctx = (this.getById("elevation-chart") as HTMLCanvasElement).getContext("2d")!;
+    
+    // Create position datasets for all activities
+    const positionDatasets = this.player.activities.map((activity, index) => ({
+      label: `Position: ${activity.title}`,
+      data: [],
+      borderColor: `rgb(${this.colors![index].join(",")})`,
+      backgroundColor: `rgb(${this.colors![index].join(",")})`,
+      pointRadius: 5,
+      pointStyle: "circle",
+      showLine: false,
+    }));
+    
+    this.elevationChart = new Chart(ctx, {
+      type: "line",
+      data: {
+        datasets: [
+          {
+            label: "Elevation (ft)",
+            data: dataPoints,
+            borderColor: "grey",
+            backgroundColor: "rgba(200, 200, 200, 0.5)",
+            fill: true,
+            pointRadius: 0,
+            tension: 0.3,
+            order: 2,
+          },
+          ...positionDatasets.map(ds => ({ ...ds, order: 1 })),
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: false,
+          },
+        },
+        scales: {
+          x: {
+            type: "linear",
+            title: {
+              display: true,
+              text: "Miles",
+            },
+            ticks: {
+              maxTicksLimit: 10,
+            },
+            max: Math.round((maxDistance) * 10) / 10,
+          },
+          y: {
+            title: {
+              display: true,
+              text: "Elevation (ft)",
+            },
+            min: yMin,
+            max: yMax,
+          },
+        },
+      },
+    });
+  }
+
+  prepareElevationData(activity: Activity): { dataPoints: {x: number, y: number}[], maxDistance: number } {
+    const elevations = activity.elevations || [];
+    const points = activity.points;
+    const metersToFeet = 3.28084;
+
+    // Calculate cumulative distance in miles
+    const distances: number[] = [0];
+    let totalDistance = 0;
+    for (let i = 1; i < points.length; i++) {
+      const dist = this.player.calcCrow(
+        points[i - 1][1],
+        points[i - 1][0],
+        points[i][1],
+        points[i][0]
+      );
+      totalDistance += this.player.getMiles(dist);
+      distances.push(totalDistance);
+    }
+
+    // Smooth elevations with a simple moving average
+    const windowSize = Math.min(30, Math.floor(elevations.length / 10) || 1);
+    const smoothedElevations: number[] = [];
+    const dataLength = Math.min(points.length, elevations.length);
+    for (let i = 0; i < dataLength; i++) {
+      const start = Math.max(0, i - windowSize);
+      const end = Math.min(elevations.length, i + windowSize + 1);
+      const window = elevations.slice(start, end);
+      const avg = window.reduce((a, b) => a + b, 0) / window.length;
+      smoothedElevations.push(avg * metersToFeet);
+    }
+
+    // Sample data for chart (reduce to ~200 points for performance)
+    const sampleInterval = Math.max(1, Math.floor(dataLength / 200));
+    const dataPoints: {x: number, y: number}[] = [];
+    for (let i = 0; i < dataLength; i += sampleInterval) {
+      dataPoints.push({
+        x: distances[i],
+        y: smoothedElevations[i]
+      });
+    }
+    
+    // Always include the last point to show the full distance
+    const lastIndex = dataLength - 1;
+    if (dataPoints.length === 0 || dataPoints[dataPoints.length - 1].x !== distances[lastIndex]) {
+      dataPoints.push({
+        x: distances[lastIndex],
+        y: smoothedElevations[lastIndex]
+      });
+    }
+
+    return { dataPoints, maxDistance: distances[dataLength - 1] };
+  }
+
+  updateElevationChartPosition() {
+    if (!this.elevationChart || !this.currentChartActivityId) return;
+
+    const chartActivity = this.player.activities.find((a) => a.id === this.currentChartActivityId);
+    if (!chartActivity || !chartActivity.elevations) return;
+
+    const currentSecond = this.player.seconds;
+
+    // Get the elevation dataset
+    const elevationDataset = this.elevationChart.data.datasets[0].data as {x: number, y: number}[];
+
+    // Update position for each activity
+    for (let i = 0; i < this.player.activities.length; i++) {
+      const activity = this.player.activities[i];
+      const positionDataset = this.elevationChart.data.datasets[i + 1]; // +1 because elevation is dataset 0
+
+      if (!activity.visible || !activity.elevations || currentSecond >= activity.points.length) {
+        positionDataset.data = [];
+        continue;
+      }
+
+      // Calculate current distance for this activity
+      let totalDistance = 0;
+      for (let j = 1; j <= currentSecond && j < activity.points.length; j++) {
+        const dist = this.player.calcCrow(
+          activity.points[j - 1][1],
+          activity.points[j - 1][0],
+          activity.points[j][1],
+          activity.points[j][0]
+        );
+        totalDistance += this.player.getMiles(dist);
+      }
+
+      // Find the corresponding y value from the elevation graph at this x (distance)
+      let elevationY = 0;
+      if (elevationDataset.length > 0) {
+        // Find the closest point or interpolate
+        let closestIndex = 0;
+        let minDiff = Math.abs(elevationDataset[0].x - totalDistance);
+        
+        for (let j = 1; j < elevationDataset.length; j++) {
+          const diff = Math.abs(elevationDataset[j].x - totalDistance);
+          if (diff < minDiff) {
+            minDiff = diff;
+            closestIndex = j;
+          }
+        }
+        
+        // Interpolate if between two points
+        if (closestIndex > 0 && closestIndex < elevationDataset.length - 1) {
+          const prev = elevationDataset[closestIndex - 1];
+          const curr = elevationDataset[closestIndex];
+          const next = elevationDataset[closestIndex + 1];
+          
+          if (totalDistance < curr.x && prev) {
+            // Interpolate between prev and curr
+            const ratio = (totalDistance - prev.x) / (curr.x - prev.x);
+            elevationY = prev.y + ratio * (curr.y - prev.y);
+          } else if (totalDistance > curr.x && next) {
+            // Interpolate between curr and next
+            const ratio = (totalDistance - curr.x) / (next.x - curr.x);
+            elevationY = curr.y + ratio * (next.y - curr.y);
+          } else {
+            elevationY = curr.y;
+          }
+        } else {
+          elevationY = elevationDataset[closestIndex].y;
+        }
+      }
+
+      // Update the position point
+      positionDataset.data = [
+        {
+          x: totalDistance,
+          y: elevationY,
+        },
+      ] as any;
+    }
+
+    this.elevationChart.update("none");
+  }
+
   toggleSettings(activityId: number) {
     const id = `settings-list-${activityId}`;
     const settings = this.getById(id);

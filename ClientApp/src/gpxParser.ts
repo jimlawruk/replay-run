@@ -17,6 +17,7 @@ export class GPXParser {
     const xmlDoc = this.domParser.parseFromString(fileText, "text/xml");
     const trkPoints = xmlDoc.getElementsByTagName("trkpt");
     const longLatArray: Array<Array<number>> = [];
+    const elevations: Array<number> = [];
     let intervalTime = 1;
     const intervalTimeElements = xmlDoc.getElementsByTagName("intervalTime");
     if (intervalTimeElements.length > 0) {
@@ -25,10 +26,12 @@ export class GPXParser {
     let title = xmlDoc.getElementsByTagName("name")[0].innerHTML;
     let previousTime: Date | null = null;
     let previousLonLat: Array<number> | null = null;
+    let previousElevation: number | null = null;
     let startDateTime: Date;
     for (let i = 0; i < trkPoints.length; i++) {
       const lon = this.getFloatVal(trkPoints[i], "lon");
       const lat = this.getFloatVal(trkPoints[i], "lat");
+      const elevation = this.getElevation(trkPoints[i]);
       const currentLonLat = [lon, lat];
       const time = this.getTimeVal(trkPoints[i]);
       if (previousTime && time) {
@@ -39,19 +42,23 @@ export class GPXParser {
       }
       if (i === 0) {
         longLatArray.push([lon, lat]);
+        elevations.push(elevation);
         if (time) {
           startDateTime = time;
         }
       } else {
         const derivedLonLats = this.getDerivedLatLongs(previousLonLat!, currentLonLat, intervalTime);
+        const derivedElevations = this.getSequenceOfNumbers(previousElevation!, elevation, intervalTime);
         for (let j = 0; j < derivedLonLats.length; j++) {
           longLatArray.push(derivedLonLats[j]);
+          elevations.push(derivedElevations[j]);
         }
       }
       previousTime = time;
       previousLonLat = [lon, lat];
+      previousElevation = elevation;
     }
-    return { title: title, points: longLatArray, visible: true, startDateTime: startDateTime! };
+    return { title: title, points: longLatArray, elevations: elevations, visible: true, startDateTime: startDateTime! };
   }
 
   getActivitiesFromResultWithoutTimestamps(fileText: string, seconds: number): Activity {
@@ -59,29 +66,36 @@ export class GPXParser {
     let title = xmlDoc.getElementsByTagName("name")[0].innerHTML;
     const trkPoints = xmlDoc.getElementsByTagName("trkpt");
     const longLatArray: Array<Array<number>> = [];
+    const elevations: Array<number> = [];
     let secondsPerPoint = 1;
     if (trkPoints.length + 1 < seconds) {
       secondsPerPoint = seconds / (trkPoints.length - 1);
     }
     let secondsConsumed = 0;
     let previousLonLat: Array<number> | null = null;
+    let previousElevation: number | null = null;
     for (let i = 0; i < trkPoints.length; i++) {
       const lon = this.getFloatVal(trkPoints[i], "lon");
       const lat = this.getFloatVal(trkPoints[i], "lat");
+      const elevation = this.getElevation(trkPoints[i]);
       const currentLonLat = [lon, lat];
       if (i === 0) {
         longLatArray.push([lon, lat]);
+        elevations.push(elevation);
       } else {
         secondsConsumed = secondsConsumed + secondsPerPoint;
         let intervalTime = Math.trunc(secondsConsumed - (longLatArray.length - 1));
         const derivedLonLats = this.getDerivedLatLongs(previousLonLat!, currentLonLat, intervalTime);
+        const derivedElevations = this.getSequenceOfNumbers(previousElevation!, elevation, intervalTime);
         for (let j = 0; j < derivedLonLats.length; j++) {
           longLatArray.push(derivedLonLats[j]);
+          elevations.push(derivedElevations[j]);
         }
       }
       previousLonLat = [lon, lat];
+      previousElevation = elevation;
     }
-    return { title: title, points: longLatArray, visible: true };
+    return { title: title, points: longLatArray, elevations: elevations, visible: true };
   }
 
   getFloatVal(element: Element, key: string) {
@@ -99,6 +113,14 @@ export class GPXParser {
       return new Date(timeValue);
     }
     return null;
+  }
+
+  getElevation(element: Element): number {
+    const eleValue = this.getChildElementValue(element, "ele");
+    if (eleValue) {
+      return parseFloat(eleValue);
+    }
+    return 0;
   }
 
   getChildElementValue(element: Element, key: string): string | null {
