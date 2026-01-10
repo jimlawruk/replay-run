@@ -195,6 +195,17 @@ export class Main extends Base {
       this.getById("gpxFile").click();
     });
 
+    this.addClickHandler("load-boston-demo", () => {
+      this.closeModal("modal");
+      this.loadGpxFromUrl("Boston_Marathon.gpx");
+      // Start playback after a short delay to ensure the activity is loaded
+      setTimeout(() => {
+        if (this.player.activities.length > 0) {
+          this.player.toggleStartPause(false);
+        }
+      }, 500);
+    });
+
     this.addClickHandler("process-entered-time-button", () => {
       this.closeModal("modal-enter-time");
       this.processNewGPXWithTimestamps()
