@@ -253,6 +253,54 @@ export class Player {
         return `${this.getPaddedValue(minutes)}:${this.getPaddedValue(seconds)}`;
     }
 
+    getCurrentPace(activity: Activity, currentSecond: number): string {
+        const windowSize = 30; // Larger window for more stability
+        const numWindows = 3; // Number of overlapping windows to average
+        
+        // If less than window size seconds have elapsed, use average pace
+        if (currentSecond < windowSize) {
+            return activity.averagePace || '';
+        }
+
+        let paceSum = 0;
+        let validWindows = 0;
+
+        // Calculate pace for multiple overlapping windows and average them
+        for (let w = 0; w < numWindows; w++) {
+            const windowEnd = currentSecond - (w * 5); // Overlap by shifting 5 seconds
+            const windowStart = windowEnd - windowSize;
+            
+            if (windowStart < 0) break;
+            
+            let distanceInWindow = 0;
+
+            for (let t = windowStart; t < windowEnd; t++) {
+                if (activity.points.length > t + 1) {
+                    const lastPoint = activity.points[t];
+                    const currentPoint = activity.points[t + 1];
+                    distanceInWindow += this.getMiles(this.calcCrow(lastPoint[1], lastPoint[0], currentPoint[1], currentPoint[0]));
+                }
+            }
+
+            // Calculate pace from this window
+            if (distanceInWindow > 0) {
+                const paceInMinutes = windowSize / distanceInWindow / 60;
+                paceSum += paceInMinutes;
+                validWindows++;
+            }
+        }
+
+        // Average the paces from all windows
+        if (validWindows > 0) {
+            const averagePaceMinutes = paceSum / validWindows;
+            const minutes = Math.trunc(averagePaceMinutes);
+            const seconds = Math.trunc((averagePaceMinutes - minutes) * 60);
+            return `${this.getPaddedValue(minutes)}:${this.getPaddedValue(seconds)}`;
+        }
+
+        return activity.averagePace || '';
+    }
+
     getPaddedValue(value: number) {
         return ('00' + value).slice(-2);
     }

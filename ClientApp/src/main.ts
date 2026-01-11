@@ -407,6 +407,7 @@ export class Main extends Base {
                     <td></td>
                     <td></td>
                     <td></td>
+                    <td></td>
                     <td>
                       <button class="settings" id="settings-button-${activity.id}"><i class="bi bi-gear"></i></button>                      
                         <div id="settings-list-${activity.id}" class="settings-list">
@@ -424,6 +425,7 @@ export class Main extends Base {
                   <th>Name</th>
                   <th>Miles</th>
                   <th>Pace</th>
+                  <th>Avg.</th>
                   <th>Time</th>
                   <th>Edit</th>
                 </thhead>
@@ -462,12 +464,18 @@ export class Main extends Base {
             activity.accumulatedDistance = 0;
           }
           tr.children[3].innerHTML = activity.accumulatedDistance?.toFixed(2);
-          tr.children[4].innerHTML = activity.averagePace || "";
+          
+          // Current pace (based on last 10 seconds)
+          const currentPace = this.player.getCurrentPace(activity, this.player.seconds);
+          tr.children[4].innerHTML = currentPace;
+          
+          // Average pace
+          tr.children[5].innerHTML = activity.averagePace || "";
 
           if (activity.points.length - 1 <= this.player.seconds || !this.player.started) {
-            tr.children[5].innerHTML = activity.timeDisplay || "";
+            tr.children[6].innerHTML = activity.timeDisplay || "";
           } else {
-            tr.children[5].innerHTML = "";
+            tr.children[6].innerHTML = "";
           }
         }
       }
