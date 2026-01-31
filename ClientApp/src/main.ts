@@ -27,6 +27,7 @@ export class Main extends Base {
   appendActivityId?: number;
   currentFileText?: string;
   elevationChart?: Chart;
+  paceChart?: Chart;
   currentChartActivityId?: number;
 
   async run() {
@@ -197,7 +198,7 @@ export class Main extends Base {
 
     this.addClickHandler("load-boston-demo", () => {
       this.closeModal("modal");
-      this.loadGpxFromUrl("Boston_Marathon.gpx");
+      this.loadGpxFromUrl("assets/Boston_Marathon.gpx");
       // Start playback after a short delay to ensure the activity is loaded
       setTimeout(() => {
         if (this.player.activities.length > 0) {
@@ -212,18 +213,11 @@ export class Main extends Base {
     });
 
     this.addClickHandler("toggle-elevation", () => {
-      const chart = this.getById("elevation-chart");
-      const panel = this.getById("elevation-panel");
-      const button = this.getById("toggle-elevation");
-      if (chart?.style.display === "none") {
-        chart.style.display = "block";
-        panel!.style.height = "200px";
-        button!.innerHTML = '<i class="bi bi-chevron-down"></i>';
-      } else {
-        chart!.style.display = "none";
-        panel!.style.height = "35px";
-        button!.innerHTML = '<i class="bi bi-chevron-up"></i>';
-      }
+      this.toggleChartPanel("elevation");
+    });
+
+    this.addClickHandler("toggle-pace", () => {
+      this.toggleChartPanel("pace");
     });
 
     this.player.restartTimer();
@@ -599,12 +593,18 @@ export class Main extends Base {
   }
 
   updateElevationChart() {
+    const chartsContainer = this.getById("charts-container");
     const elevationPanel = this.getById("elevation-panel");
+    
     if (this.player.activities.length === 0) {
-      elevationPanel!.style.display = "none";
+      chartsContainer!.style.display = "none";
       if (this.elevationChart) {
         this.elevationChart.destroy();
         this.elevationChart = undefined;
+      }
+      if (this.paceChart) {
+        this.paceChart.destroy();
+        this.paceChart = undefined;
       }
       return;
     }
@@ -612,10 +612,11 @@ export class Main extends Base {
     // Show the latest activity's elevation
     const latestActivity = this.player.activities[this.player.activities.length - 1];
     if (!latestActivity.elevations || latestActivity.elevations.length === 0) {
-      elevationPanel!.style.display = "none";
+      chartsContainer!.style.display = "none";
       return;
     }
 
+    chartsContainer!.style.display = "block";
     elevationPanel!.style.display = "block";
     this.currentChartActivityId = latestActivity.id;
 
@@ -647,6 +648,8 @@ export class Main extends Base {
       yMin = Math.floor((center - 50) / 10) * 10;
       yMax = Math.ceil((center + 50) / 10) * 10;
     }
+
+    const xAxisMax = Math.round((maxDistance) * 10) / 10;
 
     // Destroy existing chart if any
     if (this.elevationChart) {
@@ -701,7 +704,8 @@ export class Main extends Base {
             ticks: {
               maxTicksLimit: 10,
             },
-            max: Math.round((maxDistance) * 10) / 10,
+            min: 0,
+            max: xAxisMax,
           },
           y: {
             title: {
@@ -710,10 +714,232 @@ export class Main extends Base {
             },
             min: yMin,
             max: yMax,
+            ticks: {
+              padding: 5,
+              autoSkip: true,
+              maxTicksLimit: 6
+            }
           },
         },
       },
     });
+
+    // Update pace chart
+    this.updatePaceChart(latestActivity, xAxisMax);
+  }
+
+  updatePaceChart(activity: Activity, xAxisMax: number) {
+    const pacePanel = this.getById("pace-panel");
+    pacePanel!.style.display = "block";
+
+    // Prepare pace data using the same smoothing as getCurrentPace
+    const { paceDataPoints, minPace, maxPace } = this.preparePaceData(activity);
+
+    // Calculate average pace for the horizontal line
+    const avgPaceValue = activity.averagePace ? this.parseAveragePace(activity.averagePace) : 0;
+    const avgPaceLineData = avgPaceValue > 0 ? [
+      { x: 0, y: avgPaceValue },
+      { x: xAxisMax, y: avgPaceValue }
+    ] : [];
+
+    // Destroy existing chart if any
+    if (this.paceChart) {
+      this.paceChart.destroy();
+    }
+
+    const ctx = (this.getById("pace-chart") as HTMLCanvasElement).getContext("2d")!;
+
+    // Create position datasets for all activities with labels
+    const positionDatasets = this.player.activities.map((act, index) => ({
+      label: `Position: ${act.title}`,
+      data: [],
+      borderColor: `rgb(${this.colors![index].join(",")})`,
+      backgroundColor: `rgb(${this.colors![index].join(",")})`,
+      pointRadius: 5,
+      pointStyle: "circle",
+      showLine: false,
+    }));
+
+    // Custom plugin to draw pace labels
+    const paceLabelsPlugin = {
+      id: 'paceLabels',
+      afterDatasetsDraw: (chart: any) => {
+        const ctx = chart.ctx;
+        chart.data.datasets.forEach((dataset: any, datasetIndex: number) => {
+          if (dataset.data && dataset.data.length > 0 && datasetIndex > 1) {
+            const dataPoint = dataset.data[0];
+            if (dataPoint && dataPoint.x !== undefined && dataPoint.y !== undefined) {
+              const meta = chart.getDatasetMeta(datasetIndex);
+              if (meta.data[0]) {
+                const x = meta.data[0].x;
+                const y = meta.data[0].y;
+                const label = dataPoint.label || '';
+                
+                ctx.save();
+                ctx.font = 'bold 11px Arial';
+                ctx.fillStyle = dataset.borderColor;
+                ctx.textAlign = 'center';
+                ctx.fillText(label, x, y - 10);
+                ctx.restore();
+              }
+            }
+          }
+        });
+      }
+    };
+
+    this.paceChart = new Chart(ctx, {
+      type: "line",
+      data: {
+        datasets: [
+          {
+            label: "Pace (min/mi)",
+            data: paceDataPoints,
+            borderColor: "navy",
+            backgroundColor: "transparent",
+            fill: false,
+            pointRadius: 0,
+            tension: 0.3,
+            order: 3,
+          },
+          {
+            label: "Average Pace",
+            data: avgPaceLineData,
+            borderColor: "rgba(32, 77, 92, 0.9)",
+            backgroundColor: "transparent",
+            borderDash: [5, 5],
+            borderWidth: 2,
+            fill: false,
+            pointRadius: 0,
+            tension: 0,
+            order: 2,
+          },
+          ...positionDatasets.map(ds => ({ ...ds, order: 1 })),
+        ],
+      },
+      plugins: [paceLabelsPlugin],
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        layout: {
+          padding: {
+            left: -3
+          }
+        },
+        plugins: {
+          legend: {
+            display: false,
+          },
+        },
+        scales: {
+          x: {
+            type: "linear",
+            display: true,
+            ticks: {
+              display: false,
+              maxTicksLimit: 10,
+            },
+            grid: {
+              display: true,
+            },
+            min: 0,
+            max: xAxisMax,
+          },
+          y: {
+            title: {
+              display: true,
+              text: "Pace (min/mi)",              
+            },
+            reverse: false, // Faster pace at bottom
+            min: minPace,
+            max: maxPace,
+            ticks: {
+              callback: function(value) {
+                const minutes = Math.floor(value as number);
+                const seconds = Math.round(((value as number) - minutes) * 60);
+                return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+              },
+              padding: 5,
+              autoSkip: true,
+              maxTicksLimit: 6
+            }
+          },
+        },
+      },
+    });
+  }
+
+  preparePaceData(activity: Activity): { paceDataPoints: {x: number, y: number}[], minPace: number, maxPace: number } {
+    const points = activity.points;
+    const windowSize = 30; // Same as getCurrentPace
+    const numWindows = 3;
+
+    // Calculate cumulative distances
+    const distances: number[] = [0];
+    let totalDistance = 0;
+    for (let i = 1; i < points.length; i++) {
+      const dist = this.player.calcCrow(
+        points[i - 1][1],
+        points[i - 1][0],
+        points[i][1],
+        points[i][0]
+      );
+      totalDistance += this.player.getMiles(dist);
+      distances.push(totalDistance);
+    }
+
+    // Calculate smoothed pace at each point using same algorithm as getCurrentPace
+    const paceDataPoints: {x: number, y: number}[] = [];
+    const sampleInterval = Math.max(1, Math.floor(points.length / 200));
+
+    for (let i = windowSize; i < points.length; i += sampleInterval) {
+      let paceSum = 0;
+      let validWindows = 0;
+
+      for (let w = 0; w < numWindows; w++) {
+        const windowEnd = i - (w * 5);
+        const windowStart = windowEnd - windowSize;
+
+        if (windowStart < 0) break;
+
+        let distanceInWindow = 0;
+        for (let t = windowStart; t < windowEnd; t++) {
+          if (points.length > t + 1) {
+            const lastPoint = points[t];
+            const currentPoint = points[t + 1];
+            distanceInWindow += this.player.getMiles(
+              this.player.calcCrow(lastPoint[1], lastPoint[0], currentPoint[1], currentPoint[0])
+            );
+          }
+        }
+
+        if (distanceInWindow > 0) {
+          const paceInMinutes = windowSize / distanceInWindow / 60;
+          paceSum += paceInMinutes;
+          validWindows++;
+        }
+      }
+
+      if (validWindows > 0) {
+        const avgPace = paceSum / validWindows;
+        // Include all paces, even if they exceed 9 min/mile (chart will clip them)
+        paceDataPoints.push({
+          x: distances[i],
+          y: avgPace
+        });
+      }
+    }
+
+    // Calculate min/max for y-axis
+    const paceValues = paceDataPoints.map(p => p.y);
+    let minPace = Math.min(...paceValues);
+    let maxPace = Math.max(...paceValues);
+    
+    // Cap at 9 min/mile but don't add padding - tight range
+    minPace = Math.max(Math.floor(minPace * 2) / 2, 4); // Don't go below 4 min/mile
+    maxPace = Math.min(Math.ceil(maxPace * 2) / 2, 10); // Cap at 10 min/mile
+
+    return { paceDataPoints, minPace, maxPace };
   }
 
   prepareElevationData(activity: Activity): { dataPoints: {x: number, y: number}[], maxDistance: number } {
@@ -849,6 +1075,88 @@ export class Main extends Base {
     }
 
     this.elevationChart.update("none");
+
+    // Update pace chart position as well
+    if (this.paceChart) {
+      const paceDataset = this.paceChart.data.datasets[0].data as {x: number, y: number}[];
+      
+      for (let i = 0; i < this.player.activities.length; i++) {
+        const activity = this.player.activities[i];
+        const positionDataset = this.paceChart.data.datasets[i + 2];
+
+        if (!activity.visible || currentSecond >= activity.points.length) {
+          positionDataset.data = [];
+          continue;
+        }
+
+        // Calculate current distance for this activity
+        let activityTotalDistance = 0;
+        for (let j = 1; j <= currentSecond && j < activity.points.length; j++) {
+          const dist = this.player.calcCrow(
+            activity.points[j - 1][1],
+            activity.points[j - 1][0],
+            activity.points[j][1],
+            activity.points[j][0]
+          );
+          activityTotalDistance += this.player.getMiles(dist);
+        }
+
+        // Find the corresponding y value from the pace graph
+        let paceY = 0;
+        if (paceDataset.length > 0) {
+          let closestIndex = 0;
+          let minDiff = Math.abs(paceDataset[0].x - activityTotalDistance);
+          
+          for (let j = 1; j < paceDataset.length; j++) {
+            const diff = Math.abs(paceDataset[j].x - activityTotalDistance);
+            if (diff < minDiff) {
+              minDiff = diff;
+              closestIndex = j;
+            }
+          }
+          
+          paceY = paceDataset[closestIndex].y;
+        }
+
+        positionDataset.data = [
+          {
+            x: activityTotalDistance,
+            y: paceY,
+            label: this.player.getCurrentPace(activity, currentSecond)
+          },
+        ] as any;
+      }
+
+      this.paceChart.update("none");
+    }
+  }
+
+  parseAveragePace(paceString: string): number {
+    // Parse "MM:SS" format to decimal minutes
+    const parts = paceString.split(':');
+    if (parts.length === 2) {
+      const minutes = parseInt(parts[0]);
+      const seconds = parseInt(parts[1]);
+      return minutes + (seconds / 60);
+    }
+    return 0;
+  }
+
+  toggleChartPanel(chartType: "elevation" | "pace") {
+    const chart = this.getById(`${chartType}-chart`);
+    const panel = this.getById(`${chartType}-panel`);
+    const button = this.getById(`toggle-${chartType}`);
+    const expandedHeight = chartType === "elevation" ? "150px" : "120px";
+    
+    if (chart?.style.display === "none") {
+      chart.style.display = "block";
+      panel!.style.height = expandedHeight;
+      button!.innerHTML = '<i class="bi bi-chevron-down"></i>';
+    } else {
+      chart!.style.display = "none";
+      panel!.style.height = "30px";
+      button!.innerHTML = '<i class="bi bi-chevron-up"></i>';
+    }
   }
 
   toggleSettings(activityId: number) {

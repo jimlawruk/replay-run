@@ -120,8 +120,17 @@
             <div id="drop-overlay" class="drop-overlay">
                 <div class="drop-text">Upload .GPX File by Dropping File on to the Map</div>
             </div>
-            <div id="elevation-panel" style="display: none;">
-                <div class="elevation-header">
+        </div>
+
+        <div id="charts-container" style="display: none;">
+            <div id="pace-panel">
+                <div class="chart-header">
+                    <button id="toggle-pace" class="btn btn-sm"><i class="bi bi-chevron-down"></i></button>
+                </div>
+                <canvas id="pace-chart"></canvas>
+            </div>
+            <div id="elevation-panel">
+                <div class="chart-header">
                     <button id="toggle-elevation" class="btn btn-sm"><i class="bi bi-chevron-down"></i></button>
                 </div>
                 <canvas id="elevation-chart"></canvas>
