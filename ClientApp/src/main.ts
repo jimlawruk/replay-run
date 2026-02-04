@@ -198,7 +198,7 @@ export class Main extends Base {
 
     this.addClickHandler("load-boston-demo", () => {
       this.closeModal("modal");
-      this.loadGpxFromUrl("assets/Boston_Marathon.gpx");
+      this.loadGpxFromUrl("/Boston_Marathon.gpx");
       // Start playback after a short delay to ensure the activity is loaded
       setTimeout(() => {
         if (this.player.activities.length > 0) {

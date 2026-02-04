@@ -1,5 +1,9 @@
-import { Main } from './main'
+import React from 'react';
+import { createRoot } from 'react-dom/client';
+import { App } from './components/App';
 
-const main = new Main();
-(<any>window).main = main;
-main.run();
+const container = document.getElementById('root');
+if (container) {
+  const root = createRoot(container);
+  root.render(React.createElement(App));
+}
