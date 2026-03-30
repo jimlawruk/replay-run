@@ -37,6 +37,10 @@ body,
     margin-bottom: 10px;
 }
 
+#panel button {
+    margin-right: 5px;
+}
+
 #panel i.bi {
     margin-right: 5px;
 }
