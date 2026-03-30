@@ -28,14 +28,6 @@ const AppContent: React.FC = () => {
   const gpxParser = useRef(new GPXParser());
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Check URL params on mount
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('load')) {
-      setShowWelcomeModal(false);
-    }
-  }, []);
-
   const processNewGPX = useCallback((fileText: string) => {
     setCurrentFileText(fileText);
     const hasTimestamps = gpxParser.current.doesGPXHaveTimestamps(fileText);
@@ -56,6 +48,25 @@ const AppContent: React.FC = () => {
     addActivity(activity);
     gaEvent("load_activity");
   }, [addActivity]);
+
+  const loadGpxFromQuerystring = useCallback(() => {
+    const params = new URLSearchParams(window.location.search);
+    const gpxParam = params.get('gpx');
+    if (!gpxParam) return;
+    setShowWelcomeModal(false);
+    fetch(`/GPX/${gpxParam}.gpx`)
+      .then(response => {
+        if (!response.ok) throw new Error(`GPX file not found: ${gpxParam}`);
+        return response.text();
+      })
+      .then(text => {
+        createActivityFromTextResult(text);
+        setTimeout(() => {
+          player.toggleStartPause(false);
+          refresh();
+        }, 500);
+      });
+  }, [createActivityFromTextResult, player, refresh]);
 
   const handleProcessEnteredTime = useCallback((hours: number, minutes: number, secs: number) => {
     const totalSeconds = hours * 3600 + minutes * 60 + secs;
@@ -117,6 +128,15 @@ const AppContent: React.FC = () => {
   const gaEvent = (action: string) => {
     (window as any).gtag?.("event", action);
   };
+
+    // Handle URL params on mount
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('load')) {
+      setShowWelcomeModal(false);
+    }
+    loadGpxFromQuerystring();
+  }, [loadGpxFromQuerystring]);
 
   return (
     <div id="box">
